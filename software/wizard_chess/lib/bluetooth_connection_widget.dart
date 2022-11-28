@@ -17,9 +17,7 @@ class BluetoothConnectionWidget extends StatelessWidget {
             title: const Text("Bluetooth off"),
             leading: const Icon(Icons.bluetooth_disabled, color: Colors.red),
             trailing: TextButton(
-              onPressed: () async {
-                await FlutterBluetoothSerial.instance.requestEnable();
-              },
+              onPressed: FlutterBluetoothSerial.instance.requestEnable,
               child: const Text('TURN ON'),
             ),
           );
@@ -29,9 +27,7 @@ class BluetoothConnectionWidget extends StatelessWidget {
             title: const Text("No connection"),
             leading: const Icon(Icons.bluetooth, color: Colors.red),
             trailing: TextButton(
-              onPressed: () {
-                model.tryToConnect();
-              },
+              onPressed: model.tryToConnect,
               child: const Text('CONNECT'),
             ),
           );
@@ -48,9 +44,7 @@ class BluetoothConnectionWidget extends StatelessWidget {
             title: const Text("Connected"),
             leading: const Icon(Icons.bluetooth_connected, color: Colors.green),
             trailing: TextButton(
-              onPressed: () {
-                model.disconnect();
-              },
+              onPressed: model.disconnect,
               child: const Text('DISCONNECT'),
             ),
           );

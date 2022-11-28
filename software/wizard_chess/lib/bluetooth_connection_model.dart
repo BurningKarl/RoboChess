@@ -9,11 +9,10 @@ enum BluetoothConnectionState {
 }
 
 class BluetoothConnectionModel extends Model {
-  final String chessboardAddress = 'E0:D4:64:32:A1:76';
+  final String chessboardName = "HC-06";
   BluetoothState bluetoothState = BluetoothState.UNKNOWN;
   bool connecting = false;
-  // BluetoothConnection? connection;
-  bool? connection; // TODO: Replace by real connection object
+  BluetoothConnection? connection;
 
   BluetoothConnectionModel() {
     FlutterBluetoothSerial.instance.state.then((state) {
@@ -25,10 +24,20 @@ class BluetoothConnectionModel extends Model {
       bluetoothState = state;
       notifyListeners();
     });
+
+    // Automatically handle pairing requests for HC-06
+    FlutterBluetoothSerial.instance.setPairingRequestHandler((request) async {
+      if (request.pairingVariant == PairingVariant.Pin) {
+        return "1234";
+      } else {
+        return null;
+      }
+    });
   }
 
   dispose() {
-    // connection?.dispose();
+    connection?.dispose();
+    FlutterBluetoothSerial.instance.setPairingRequestHandler(null);
   }
 
   BluetoothConnectionState connectionState() {
@@ -43,21 +52,29 @@ class BluetoothConnectionModel extends Model {
     }
   }
 
-  void tryToConnect() {
+  Future<void> tryToConnect() async {
     connecting = true;
     notifyListeners();
-    // BluetoothConnection.toAddress(chessboardAddress).then((newConnection) {
-    Future<bool>.delayed(const Duration(seconds: 2), () => true)
-        .then((newConnection) {
-      print(newConnection);
-      connection = newConnection;
+
+    try {
+      BluetoothDiscoveryResult result = await FlutterBluetoothSerial.instance
+          .startDiscovery()
+          .firstWhere((result) => result.device.name == chessboardName);
+      connection = await BluetoothConnection.toAddress(result.device.address);
+    } on StateError catch (error) {
+      // The chessboard was not found (error thrown by firstWhere)
+    } catch (error) {
+      // Probably a Bluetooth error
+      print("Error:");
+      print(error);
+    } finally {
       connecting = false;
       notifyListeners();
-    });
+    }
   }
 
   void disconnect() {
-    // connection?.finish();
+    connection?.finish();
     connection = null;
     notifyListeners();
   }
