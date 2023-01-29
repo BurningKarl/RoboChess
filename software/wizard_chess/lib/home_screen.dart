@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
 import 'package:wizard_chess/bluetooth_connection_widget.dart';
+import 'package:wizard_chess/routes.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,7 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Card(
                 child: ListTile(
                   title: const Text('Play against the computer'),
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.pushNamed(context, WizardChessRoutes.game);
+                  },
                 ),
               )
             ],

@@ -23,7 +23,7 @@ packages:
     source: hosted
     version: "1.2.1"
   chess:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: chess
       url: "https://pub.dartlang.org"
