@@ -61,7 +61,7 @@ class BluetoothConnectionModel extends Model {
           .startDiscovery()
           .firstWhere((result) => result.device.name == chessboardName);
       connection = await BluetoothConnection.toAddress(result.device.address);
-    } on StateError catch (error) {
+    } on StateError {
       // The chessboard was not found (error thrown by firstWhere)
     } catch (error) {
       // Probably a Bluetooth error
