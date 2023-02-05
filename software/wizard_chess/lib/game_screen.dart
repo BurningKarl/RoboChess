@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
@@ -19,33 +17,32 @@ class _GameScreenState extends State<GameScreen> {
   String screenContent = "Hello World";
   Chess chess = Chess();
 
+  void handleEvent(dynamic eventData) {
+    if (eventData['type'] == "event") {
+      var event = ChessboardEvent(
+          eventData['direction'] == 'down' ? Direction.down : Direction.up,
+          eventData['square']);
+
+      if (event.square == 'button') {
+        if (event.direction == Direction.up) {
+          // The user is done with their move
+          setState(() {
+            screenContent = "Done with move: ${eventQueue.map((e) => e.toJson())}";
+          });
+        }
+      } else {
+        eventQueue.add(event);
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
 
     var model = ScopedModel.of<BluetoothConnectionModel>(context);
-    // TODO: Make the converted JSON its own stream
     if (model.connectionState() == BluetoothConnectionState.connected) {
-      model.connection?.input!.listen((event) {
-        String rawData = String.fromCharCodes(event);
-        var jsonData = jsonDecode(rawData);
-
-        // TODO: Make this event handling its own function
-        if (jsonData['type'] == "event") {
-          if (jsonData['square'] == 'button') {
-            if (jsonData['direction'] == 'up') {
-              // The user is done with their move
-              setState(() {
-                screenContent = "Done with move: ${eventQueue.map((e) => e.toJson())}";
-              });
-            }
-          } else {
-            eventQueue.add(ChessboardEvent(
-                jsonData['direction'] == 'down' ? Direction.down : Direction.up,
-                jsonData['square']));
-          }
-        }
-      });
+      model.messageQueue.stream.listen(handleEvent);
     }
   }
 
@@ -60,7 +57,7 @@ class _GameScreenState extends State<GameScreen> {
           Expanded(
             child: Text(screenContent),
           ),
-          BluetoothConnectionWidget(),
+          const BluetoothConnectionWidget(),
         ],
       ),
     );

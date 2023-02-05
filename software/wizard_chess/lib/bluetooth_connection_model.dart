@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:scoped_model/scoped_model.dart';
 
@@ -8,11 +12,29 @@ enum BluetoothConnectionState {
   connected,
 }
 
+Stream<dynamic> jsonMessageTransform(Stream<Uint8List> rawData) async* {
+  String partialMessage = "";
+  await for (final characters in rawData) {
+    partialMessage += String.fromCharCodes(characters);
+
+    var lines = partialMessage.split('\n');
+    for (final line in lines.getRange(0, lines.length - 1)) {
+      var message = jsonDecode(line);
+      if (message?['version'] == 1) {
+        yield message;
+      }
+    }
+
+    partialMessage = lines.last;
+  }
+}
+
 class BluetoothConnectionModel extends Model {
   final String chessboardName = "HC-06";
   BluetoothState bluetoothState = BluetoothState.UNKNOWN;
   bool connecting = false;
   BluetoothConnection? connection;
+  var messageQueue = StreamController<dynamic>();
 
   BluetoothConnectionModel() {
     FlutterBluetoothSerial.instance.state.then((state) {
@@ -20,6 +42,7 @@ class BluetoothConnectionModel extends Model {
       notifyListeners();
     });
 
+    // BluetoothState is about whether device Bluetooth is turned on or off
     FlutterBluetoothSerial.instance.onStateChanged().listen((state) {
       bluetoothState = state;
       notifyListeners();
@@ -70,6 +93,11 @@ class BluetoothConnectionModel extends Model {
     } finally {
       connecting = false;
       notifyListeners();
+    }
+
+    if (connection != null) {
+      messageQueue.sink.addStream(connection!.input!
+          .transform(StreamTransformer.fromBind(jsonMessageTransform)));
     }
   }
 
