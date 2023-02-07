@@ -5,11 +5,11 @@ enum Direction {
   down,
 }
 
-class ChessboardEvent {
+class ChessBoardEvent {
   Direction direction;
   String square;
 
-  ChessboardEvent(this.direction, this.square);
+  ChessBoardEvent(this.direction, this.square);
 
   String toJson() {
     return jsonEncode({"direction": direction.name, "square": square});

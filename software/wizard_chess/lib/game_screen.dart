@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
 import 'package:wizard_chess/bluetooth_connection_widget.dart';
-import 'package:wizard_chess/chessboard_event.dart';
+import 'package:wizard_chess/chess_board_event.dart';
 import "package:chess/chess.dart" show Chess;
 
 class GameScreen extends StatefulWidget {
@@ -13,13 +13,13 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  List<ChessboardEvent> eventQueue = [];
+  List<ChessBoardEvent> eventQueue = [];
   String screenContent = "Hello World";
   Chess chess = Chess();
 
   void handleEvent(dynamic eventData) {
     if (eventData['type'] == "event") {
-      var event = ChessboardEvent(
+      var event = ChessBoardEvent(
           eventData['direction'] == 'down' ? Direction.down : Direction.up,
           eventData['square']);
 
