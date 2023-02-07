@@ -15,5 +15,10 @@ class ChessBoardEvent {
     return jsonEncode({"direction": direction.name, "square": square});
   }
 
-  // TODO: Add fromJson
+  static ChessBoardEvent fromJson(Map<String, String> data) {
+    return ChessBoardEvent(
+      Direction.values.byName(data['direction']!),
+      data['square']!,
+    );
+  }
 }

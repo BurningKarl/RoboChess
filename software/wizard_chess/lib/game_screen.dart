@@ -19,9 +19,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void handleEvent(dynamic eventData) {
     if (eventData['type'] == "event") {
-      var event = ChessBoardEvent(
-          eventData['direction'] == 'down' ? Direction.down : Direction.up,
-          eventData['square']);
+      var event = ChessBoardEvent.fromJson(eventData);
 
       if (event.square == 'button') {
         if (event.direction == Direction.up) {
