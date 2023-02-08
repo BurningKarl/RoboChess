@@ -79,6 +79,8 @@ class BluetoothConnectionModel extends Model {
     connecting = true;
     notifyListeners();
 
+    // TODO: Request Bluetooth permissions before connecting
+
     try {
       BluetoothDiscoveryResult result = await FlutterBluetoothSerial.instance
           .startDiscovery()
