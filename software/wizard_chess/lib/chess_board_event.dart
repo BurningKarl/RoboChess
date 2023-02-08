@@ -9,16 +9,16 @@ class ChessBoardEvent {
   Direction direction;
   String square;
 
-  ChessBoardEvent(this.direction, this.square);
+  ChessBoardEvent({required this.direction, required this.square});
 
   String toJson() {
     return jsonEncode({"direction": direction.name, "square": square});
   }
 
-  static ChessBoardEvent fromJson(Map<String, String> data) {
+  static ChessBoardEvent fromJson(Map<String, dynamic> data) {
     return ChessBoardEvent(
-      Direction.values.byName(data['direction']!),
-      data['square']!,
+      direction: Direction.values.byName(data['direction']!),
+      square: data['square']!,
     );
   }
 }
