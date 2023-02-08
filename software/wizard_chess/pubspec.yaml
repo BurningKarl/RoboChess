@@ -39,7 +39,6 @@ dependencies:
   flutter_chess_board: ^1.0.1
   flutter_bluetooth_serial: ^0.4.0
   scoped_model: ^2.0.0
-  chess: ^0.7.0
 
 dev_dependencies:
   flutter_test:
