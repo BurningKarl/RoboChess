@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:flutter_chess_board/flutter_chess_board.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
 import 'package:wizard_chess/bluetooth_connection_widget.dart';
 import 'package:wizard_chess/chess_board_event.dart';
-import "package:chess/chess.dart" show Chess;
+import 'package:wizard_chess/chess_logic.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -15,9 +16,10 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   List<ChessBoardEvent> eventQueue = [];
   String screenContent = "Hello World";
-  Chess chess = Chess();
+  RoboChessBoardController controller = RoboChessBoardController(Chess());
+  ChessOpponent opponent = RandomChessOpponent();
 
-  void handleEvent(dynamic eventData) {
+  void handleEvent(dynamic eventData) async {
     if (eventData['type'] == "event") {
       var event = ChessBoardEvent.fromJson(eventData);
 
@@ -25,8 +27,17 @@ class _GameScreenState extends State<GameScreen> {
         if (event.direction == Direction.up) {
           // The user is done with their move
           setState(() {
-            screenContent = "Done with move: ${eventQueue.map((e) => e.toJson())}";
+            screenContent =
+                "Done with move: ${eventQueue.map((e) => e.toJson())}";
           });
+
+          // TODO: Fix timing issues
+          // If this is called while the other player is thinking about or
+          // performing their move, we run into problems
+          var playerMove = interpretMove(controller.game, eventQueue);
+          controller.makeMoveFromObject(playerMove);
+          var opponentMove = await opponent.move(controller.game);
+          controller.makeMoveFromObject(opponentMove);
         }
       } else {
         eventQueue.add(event);
@@ -52,6 +63,12 @@ class _GameScreenState extends State<GameScreen> {
       ),
       body: Column(
         children: [
+          ChessBoard(
+            controller: controller,
+            boardOrientation: PlayerColor.white,
+            // TODO: Disable user moves, currently useful for debugging
+            // enableUserMoves: false,
+          ),
           Expanded(
             child: Text(screenContent),
           ),
