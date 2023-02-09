@@ -5,18 +5,18 @@ enum Direction {
   down,
 }
 
-class ChessBoardEvent {
+class RoboChessBoardEvent {
   Direction direction;
   String square;
 
-  ChessBoardEvent({required this.direction, required this.square});
+  RoboChessBoardEvent({required this.direction, required this.square});
 
   String toJson() {
     return jsonEncode({"direction": direction.name, "square": square});
   }
 
-  static ChessBoardEvent fromJson(Map<String, dynamic> data) {
-    return ChessBoardEvent(
+  static RoboChessBoardEvent fromJson(Map<String, dynamic> data) {
+    return RoboChessBoardEvent(
       direction: Direction.values.byName(data['direction']!),
       square: data['square']!,
     );

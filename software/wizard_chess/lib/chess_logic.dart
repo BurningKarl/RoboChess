@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chess_board/flutter_chess_board.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
-import 'package:wizard_chess/chess_board_event.dart';
+import 'package:wizard_chess/robo_chess_board_event.dart';
 
 class IllegalMoveException implements Exception {}
 
 class RoboMoveUnsuccessfulException implements Exception {}
 
-Move? extractMove(final Chess gameState, final List<ChessBoardEvent> events) {
+Move? extractMove(final Chess gameState, final List<RoboChessBoardEvent> events) {
   // TODO: Implement Sam's logic
   var legalMoves = gameState.generate_moves();
   legalMoves.shuffle();

@@ -6,7 +6,7 @@ import 'package:scoped_model/scoped_model.dart';
 import 'package:flutter_chess_board/flutter_chess_board.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
 import 'package:wizard_chess/bluetooth_connection_widget.dart';
-import 'package:wizard_chess/chess_board_event.dart';
+import 'package:wizard_chess/robo_chess_board_event.dart';
 import 'package:wizard_chess/chess_logic.dart';
 
 class GameScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   String screenContent = "Hello World";
   bool receiveEvents = true;
-  List<ChessBoardEvent> eventHistory = [];
+  List<RoboChessBoardEvent> eventHistory = [];
   InternalChessBoardController internalController = InternalChessBoardController(Chess());
   late RoboChessBoardController roboController;
   ChessOpponent opponent = RandomChessOpponent();
@@ -76,7 +76,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void handleEvent(dynamic eventData) async {
     if (eventData['type'] == "event" && receiveEvents) {
-      var event = ChessBoardEvent.fromJson(eventData);
+      var event = RoboChessBoardEvent.fromJson(eventData);
 
       if (event.square == 'button') {
         if (event.direction == Direction.up) {
