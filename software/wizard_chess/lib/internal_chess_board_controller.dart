@@ -12,7 +12,11 @@ class InternalChessBoardController extends ValueNotifier<Chess>
   // New functions
   bool makeMoveFromObject(Move move) {
     bool isLegalMove = game.move(move);
-    notifyListeners();
+    if (isLegalMove) {
+      notifyListeners();
+    } else {
+      // The move was illegal and was not executed, nothing changed.
+    }
     return isLegalMove;
   }
 

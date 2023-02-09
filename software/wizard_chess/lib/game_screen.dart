@@ -21,15 +21,42 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   String screenContent = "Hello World";
-  bool receiveEvents = true;
+  Color playerColor = Color.WHITE;
+  bool receiveEvents = false;
   List<RoboChessBoardEvent> eventHistory = [];
-  InternalChessBoardController internalController = InternalChessBoardController(Chess());
+  InternalChessBoardController internalController =
+      InternalChessBoardController(Chess());
   late RoboChessBoardController roboController;
   ChessOpponent opponent = RandomChessOpponent();
 
-  // Future<void> executeMoveOnChessBoard()
-  
-  Future<void> onMoveFinished() async {
+  Future<void> onInternalMoveMade() async {
+    if (internalController.game.turn == playerColor) {
+      // Start listening to board events, one of which will indicate that the
+      // players move is done
+      receiveEvents = true;
+    } else {
+      late Move opponentMove; // Makes name available outside of try scope
+      try {
+        opponentMove = await opponent.calculateMove(internalController.game);
+      } on Exception catch (e) {
+        // TODO: Make a popup that tells the user
+        // Options: Save game now and quit or retry
+        SystemNavigator.pop();
+        return;
+      }
+
+      try {
+        // Execute opponent move on physical chess board
+        roboController.makeMove(opponentMove);
+      } on RoboMoveUnsuccessfulException {
+        // TODO: Make a popup that asks user to perform the move themselves
+      }
+
+      internalController.game.move(opponentMove);
+    }
+  }
+
+  Future<void> onPlayerMoveFinished() async {
     // Stop listening to board events, since all the board events should
     // come from the board making its move and we know what it is going
     // to do
@@ -41,7 +68,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // Extract move from event history
     var playerMove = extractMove(internalController.game, eventHistory);
-    eventHistory.clear(); // Whatever happens, these events are outdated now
+    eventHistory.clear(); // These events are outdated now
 
     // Execute player move and check for legality
     bool playerMoveIsLegal =
@@ -54,27 +81,6 @@ class _GameScreenState extends State<GameScreen> {
       receiveEvents = true;
       return;
     }
-
-    try {
-      // Calculate the opponents move in the current board state
-      var opponentMove = await opponent.calculateMove(internalController.game);
-
-      // Execute opponent move and check for legality
-      bool opponentMoveIsLegal = internalController.makeMoveFromObject(opponentMove);
-      if (!opponentMoveIsLegal) {
-        throw IllegalMoveException();
-      }
-
-      // Execute opponent move on physical chess board
-      roboController.makeMove(opponentMove);
-    } on Exception catch (e) {
-      // TODO: Make a popup that tells the user
-      // Options: Save game now and quit or retry
-      SystemNavigator.pop();
-    }
-
-    // Start listening to board events again
-    receiveEvents = true;
   }
 
   void handleEvent(dynamic eventData) async {
@@ -84,7 +90,7 @@ class _GameScreenState extends State<GameScreen> {
       if (event.square == 'button') {
         if (event.direction == Direction.up) {
           // The user is done with their move
-          await onMoveFinished();
+          await onPlayerMoveFinished();
         }
       } else {
         eventHistory.add(event);
@@ -100,6 +106,9 @@ class _GameScreenState extends State<GameScreen> {
     model.messageQueue.stream.listen(handleEvent);
 
     roboController = RoboChessBoardController(bluetooth: model);
+
+    internalController.addListener(onInternalMoveMade);
+    onInternalMoveMade();
   }
 
   @override
