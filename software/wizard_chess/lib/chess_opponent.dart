@@ -12,6 +12,12 @@ class RandomChessOpponent implements ChessOpponent {
     // Dummy implementation, ask computer or human opponent
     var legalMoves = gameState.generate_moves();
     legalMoves.shuffle();
-    return legalMoves.first;
+    var chosenMove = legalMoves.first;
+
+    if (!gameState.generate_moves().contains(chosenMove)) {
+      throw IllegalMoveException();
+    } else {
+      return chosenMove;
+    }
   }
 }
