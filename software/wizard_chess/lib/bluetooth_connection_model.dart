@@ -16,6 +16,7 @@ Stream<dynamic> jsonMessageTransform(Stream<Uint8List> rawData) async* {
   String partialMessage = "";
   await for (final characters in rawData) {
     partialMessage += String.fromCharCodes(characters);
+    print("jsonMessageTransform: $partialMessage");
 
     var lines = partialMessage.split('\n');
     for (final line in lines.getRange(0, lines.length - 1)) {

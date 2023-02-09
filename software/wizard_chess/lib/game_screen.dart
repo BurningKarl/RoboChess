@@ -30,6 +30,7 @@ class _GameScreenState extends State<GameScreen> {
   ChessOpponent opponent = RandomChessOpponent();
 
   Future<void> onInternalMoveMade() async {
+    print("onInternalMoveMade: turn=${internalController.game.turn}");
     if (internalController.game.turn == playerColor) {
       // Start listening to board events, one of which will indicate that the
       // players move is done
@@ -41,9 +42,12 @@ class _GameScreenState extends State<GameScreen> {
       } on Exception catch (e) {
         // TODO: Make a popup that tells the user
         // Options: Save game now and quit or retry
-        SystemNavigator.pop();
+        // SystemNavigator.pop();
+        print(e);
         return;
       }
+
+      print("opponentMove=$opponentMove");
 
       try {
         // Execute opponent move on physical chess board
@@ -52,7 +56,7 @@ class _GameScreenState extends State<GameScreen> {
         // TODO: Make a popup that asks user to perform the move themselves
       }
 
-      internalController.game.move(opponentMove);
+      internalController.makeMoveFromObject(opponentMove);
     }
   }
 
@@ -62,6 +66,7 @@ class _GameScreenState extends State<GameScreen> {
     // to do
     receiveEvents = false;
 
+    print("onPlayerMoveFinished");
     setState(() {
       screenContent = "Done with move: ${eventHistory.map((e) => e.toJson())}";
     });
@@ -69,6 +74,8 @@ class _GameScreenState extends State<GameScreen> {
     // Extract move from event history
     var playerMove = extractMove(internalController.game, eventHistory);
     eventHistory.clear(); // These events are outdated now
+
+    print("playerMove=$playerMove");
 
     // Execute player move and check for legality
     bool playerMoveIsLegal =
@@ -84,6 +91,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void handleEvent(dynamic eventData) async {
+    print("handleEvent: $eventData");
     if (eventData['type'] == "event" && receiveEvents) {
       var event = RoboChessBoardEvent.fromJson(eventData);
 
