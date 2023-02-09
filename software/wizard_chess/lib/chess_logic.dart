@@ -1,46 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chess_board/flutter_chess_board.dart';
+import 'package:wizard_chess/bluetooth_connection_model.dart';
 import 'package:wizard_chess/chess_board_event.dart';
 
-class AmbiguousMoveException implements Exception {}
+class IllegalMoveException implements Exception {}
 
-class InvalidMoveException implements Exception {}
+class RoboMoveUnsuccessfulException implements Exception {}
 
-class WrongPlayerError extends Error {}
-
-Move interpretMove(final Chess gameState, final List<ChessBoardEvent> events) {
+Move? extractMove(final Chess gameState, final List<ChessBoardEvent> events) {
   // TODO: Implement Sam's logic
   var legalMoves = gameState.generate_moves();
   legalMoves.shuffle();
-  return legalMoves.first;
-  throw AmbiguousMoveException();
+  return legalMoves.first; // or return null;
 }
 
 abstract class ChessOpponent {
-  Future<Move> move(final Chess gameState);
+  Future<Move> calculateMove(final Chess gameState);
 }
 
 class RandomChessOpponent implements ChessOpponent {
   @override
-  Future<Move> move(final Chess gameState) async {
+  Future<Move> calculateMove(final Chess gameState) async {
+    // Dummy implementation, ask computer or human opponent
     var legalMoves = gameState.generate_moves();
     legalMoves.shuffle();
     return legalMoves.first;
   }
 }
 
+class RoboChessBoardController {
+  BluetoothConnectionModel bluetooth;
+
+  RoboChessBoardController({required this.bluetooth});
+
+  Future<void> makeMove(Move move) async {
+    // TODO: Instruct board to execute the move
+    // wait for response that the move has been executed successfully
+    // raise an error if the move was not completed successfully
+    // or after, say, a minute of no response from the board
+  }
+}
+
 // Reimplement ChessBoardController, because the original class cannot be subclassed
-class RoboChessBoardController extends ValueNotifier<Chess>
+class InternalChessBoardController extends ValueNotifier<Chess>
     implements ChessBoardController {
   @override
   Chess game;
 
-  RoboChessBoardController(this.game) : super(game);
+  InternalChessBoardController(this.game) : super(game);
 
   // New functions
-  void makeMoveFromObject(Move move) {
-    game.move(move);
+  bool makeMoveFromObject(Move move) {
+    bool isLegalMove = game.move(move);
     notifyListeners();
+    return isLegalMove;
   }
 
   // Old functions to make `implements ChessBoardController` work

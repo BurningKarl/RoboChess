@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:flutter_chess_board/flutter_chess_board.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
@@ -14,33 +17,74 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  List<ChessBoardEvent> eventQueue = [];
   String screenContent = "Hello World";
-  RoboChessBoardController controller = RoboChessBoardController(Chess());
+  bool receiveEvents = true;
+  List<ChessBoardEvent> eventHistory = [];
+  InternalChessBoardController internalController = InternalChessBoardController(Chess());
+  late RoboChessBoardController roboController;
   ChessOpponent opponent = RandomChessOpponent();
 
+  // Future<void> executeMoveOnChessBoard()
+  
+  Future<void> onMoveFinished() async {
+    // Stop listening to board events, since all the board events should
+    // come from the board making its move and we know what it is going
+    // to do
+    receiveEvents = false;
+
+    setState(() {
+      screenContent = "Done with move: ${eventHistory.map((e) => e.toJson())}";
+    });
+
+    // Extract move from event history
+    var playerMove = extractMove(internalController.game, eventHistory);
+    eventHistory.clear(); // Whatever happens, these events are outdated now
+
+    // Execute player move and check for legality
+    bool playerMoveIsLegal =
+        playerMove != null && internalController.makeMoveFromObject(playerMove);
+    if (!playerMoveIsLegal) {
+      // TODO: Make a popup that tells the user
+      // When the popup is closed and the user has reset the board to the
+      // previous position, clear event history and start listening  to board
+      // events again
+      receiveEvents = true;
+      return;
+    }
+
+    try {
+      // Calculate the opponents move in the current board state
+      var opponentMove = await opponent.calculateMove(internalController.game);
+
+      // Execute opponent move and check for legality
+      bool opponentMoveIsLegal = internalController.makeMoveFromObject(opponentMove);
+      if (!opponentMoveIsLegal) {
+        throw IllegalMoveException();
+      }
+
+      // Execute opponent move on physical chess board
+      roboController.makeMove(opponentMove);
+    } on Exception catch (e) {
+      // TODO: Make a popup that tells the user
+      // Options: Save game now and quit or retry
+      SystemNavigator.pop();
+    }
+
+    // Start listening to board events again
+    receiveEvents = true;
+  }
+
   void handleEvent(dynamic eventData) async {
-    if (eventData['type'] == "event") {
+    if (eventData['type'] == "event" && receiveEvents) {
       var event = ChessBoardEvent.fromJson(eventData);
 
       if (event.square == 'button') {
         if (event.direction == Direction.up) {
           // The user is done with their move
-          setState(() {
-            screenContent =
-                "Done with move: ${eventQueue.map((e) => e.toJson())}";
-          });
-
-          // TODO: Fix timing issues
-          // If this is called while the other player is thinking about or
-          // performing their move, we run into problems
-          var playerMove = interpretMove(controller.game, eventQueue);
-          controller.makeMoveFromObject(playerMove);
-          var opponentMove = await opponent.move(controller.game);
-          controller.makeMoveFromObject(opponentMove);
+          await onMoveFinished();
         }
       } else {
-        eventQueue.add(event);
+        eventHistory.add(event);
       }
     }
   }
@@ -51,6 +95,8 @@ class _GameScreenState extends State<GameScreen> {
 
     var model = ScopedModel.of<BluetoothConnectionModel>(context);
     model.messageQueue.stream.listen(handleEvent);
+
+    roboController = RoboChessBoardController(bluetooth: model);
   }
 
   @override
@@ -62,7 +108,7 @@ class _GameScreenState extends State<GameScreen> {
       body: Column(
         children: [
           ChessBoard(
-            controller: controller,
+            controller: internalController,
             boardOrientation: PlayerColor.white,
             // TODO: Disable user moves, currently useful for debugging
             // enableUserMoves: false,
