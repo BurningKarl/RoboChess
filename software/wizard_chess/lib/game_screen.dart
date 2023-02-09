@@ -50,9 +50,7 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
 
     var model = ScopedModel.of<BluetoothConnectionModel>(context);
-    if (model.connectionState() == BluetoothConnectionState.connected) {
-      model.messageQueue.stream.listen(handleEvent);
-    }
+    model.messageQueue.stream.listen(handleEvent);
   }
 
   @override

@@ -34,7 +34,7 @@ class BluetoothConnectionModel extends Model {
   BluetoothState bluetoothState = BluetoothState.UNKNOWN;
   bool connecting = false;
   BluetoothConnection? connection;
-  var messageQueue = StreamController<dynamic>();
+  var messageQueue = StreamController<dynamic>.broadcast();
 
   BluetoothConnectionModel() {
     FlutterBluetoothSerial.instance.state.then((state) {
