@@ -6,8 +6,11 @@ import 'package:scoped_model/scoped_model.dart';
 import 'package:flutter_chess_board/flutter_chess_board.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
 import 'package:wizard_chess/bluetooth_connection_widget.dart';
+import 'package:wizard_chess/internal_chess_board_controller.dart';
 import 'package:wizard_chess/robo_chess_board_event.dart';
+import 'package:wizard_chess/robo_chess_board_controller.dart';
 import 'package:wizard_chess/chess_logic.dart';
+import 'package:wizard_chess/chess_opponent.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
