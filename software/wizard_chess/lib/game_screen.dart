@@ -31,6 +31,8 @@ class _GameScreenState extends State<GameScreen> {
 
   Future<void> onInternalMoveMade() async {
     print("onInternalMoveMade: turn=${internalController.game.turn}");
+    // TODO: Handle end of game
+
     if (internalController.game.turn == playerColor) {
       // Start listening to board events, one of which will indicate that the
       // players move is done
@@ -47,7 +49,7 @@ class _GameScreenState extends State<GameScreen> {
         return;
       }
 
-      print("opponentMove=$opponentMove");
+      print("opponentMove=${opponentMove.toJson()}");
 
       try {
         // Execute opponent move on physical chess board
@@ -75,7 +77,7 @@ class _GameScreenState extends State<GameScreen> {
     var playerMove = extractMove(internalController.game, eventHistory);
     eventHistory.clear(); // These events are outdated now
 
-    print("playerMove=$playerMove");
+    print("playerMove=${playerMove?.toJson()}");
 
     // Execute player move and check for legality
     bool playerMoveIsLegal =
