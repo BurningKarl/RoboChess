@@ -1,17 +1,53 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter_chess_board/flutter_chess_board.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
+import 'package:uuid/uuid.dart';
 
 class RoboMoveUnsuccessfulException implements Exception {}
 
 class RoboChessBoardController {
   BluetoothConnectionModel bluetooth;
+  final Uuid _uuid = const Uuid();
 
   RoboChessBoardController({required this.bluetooth});
 
   Future<void> makeMove(Move move) async {
-    // TODO: Instruct board to execute the move
-    // wait for response that the move has been executed successfully
-    // raise an error if the move was not completed successfully
-    // or after, say, a minute of no response from the board
+    print("RoboChessBoardController.makeMove");
+
+    var uniqueId = _uuid.v4();
+    String message = jsonEncode({
+      'version': 1,
+      'type': 'move',
+      'id': uniqueId,
+      'move': {
+        'from': move.from,
+        'to': move.to,
+        'flags': move.flags,
+      }
+    });
+
+    bluetooth.connection!.output
+        .add(Uint8List.fromList(utf8.encode('$message\n')));
+    var response = await bluetooth.messageQueue.stream
+        .firstWhere((element) {
+          print("firstWhere");
+          print('element[type]=${element['type']}');
+          print('element[id]=${element['id']}');
+          print('element[type] == "response"=${element['type'] == 'response'}');
+          print('element[id] == uniqueId=${element['id'] == uniqueId}');
+          return element['type'] == 'response' && element['id'] == uniqueId;
+        })
+        .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => {'moveSuccessful': false},
+        );
+
+    if (response['moveSuccessful']) {
+      return;
+    } else {
+      throw RoboMoveUnsuccessfulException();
+    }
   }
 }

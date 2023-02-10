@@ -53,9 +53,10 @@ class _GameScreenState extends State<GameScreen> {
 
       try {
         // Execute opponent move on physical chess board
-        roboController.makeMove(opponentMove);
-      } on RoboMoveUnsuccessfulException {
+        await roboController.makeMove(opponentMove);
+      } on RoboMoveUnsuccessfulException catch (e) {
         // TODO: Make a popup that asks user to perform the move themselves
+        print(e);
       }
 
       internalController.makeMoveFromObject(opponentMove);
