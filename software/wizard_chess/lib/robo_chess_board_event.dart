@@ -15,7 +15,7 @@ class RoboChessBoardEvent {
     return jsonEncode({"direction": direction.name, "square": square});
   }
 
-  static RoboChessBoardEvent fromJson(Map<String, dynamic> data) {
+  factory RoboChessBoardEvent.fromJson(Map<String, dynamic> data) {
     return RoboChessBoardEvent(
       direction: Direction.values.byName(data['direction']!),
       square: data['square']!,

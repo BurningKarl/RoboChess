@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter_chess_board/flutter_chess_board.dart';
 import 'package:wizard_chess/robo_chess_board_event.dart';
 
-extension MoveWithSan on Move {
+extension MoveWithJson on Move {
   String toJson() {
     return jsonEncode({
       "color": color.toString(),

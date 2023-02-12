@@ -31,14 +31,8 @@ class RoboChessBoardController {
     bluetooth.connection!.output
         .add(Uint8List.fromList(utf8.encode('$message\n')));
     var response = await bluetooth.messageQueue.stream
-        .firstWhere((element) {
-          print("firstWhere");
-          print('element[type]=${element['type']}');
-          print('element[id]=${element['id']}');
-          print('element[type] == "response"=${element['type'] == 'response'}');
-          print('element[id] == uniqueId=${element['id'] == uniqueId}');
-          return element['type'] == 'response' && element['id'] == uniqueId;
-        })
+        .firstWhere((element) =>
+            element['type'] == 'response' && element['id'] == uniqueId)
         .timeout(
           const Duration(seconds: 10),
           onTimeout: () => {'moveSuccessful': false},
