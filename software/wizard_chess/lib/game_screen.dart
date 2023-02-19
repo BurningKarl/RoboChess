@@ -78,6 +78,10 @@ class _GameScreenState extends State<GameScreen> {
     var playerMove = extractMove(internalController.game, eventHistory);
     eventHistory.clear(); // These events are outdated now
 
+    if (playerMove != null && (playerMove.flags & Chess.BITS_PROMOTION) != 0) {
+      // TODO: Ask the player for the promotion piece
+    }
+
     print("playerMove=${playerMove?.toJson()}");
 
     // Execute player move and check for legality
@@ -98,7 +102,7 @@ class _GameScreenState extends State<GameScreen> {
     if (eventData['type'] == "event" && receiveEvents) {
       var event = RoboChessBoardEvent.fromJson(eventData);
 
-      if (event.square == 'button') {
+      if (event.square == 1 << 8) {
         if (event.direction == Direction.up) {
           // The user is done with their move
           await onPlayerMoveFinished();
