@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:wizard_chess/game_screen.dart';
-
 import 'package:wizard_chess/routes.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
 import 'package:wizard_chess/home_screen.dart';
+import 'package:wizard_chess/settings_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const WizardChessApp());
 }
 
@@ -23,6 +24,7 @@ class WizardChessApp extends StatelessWidget {
       routes: {
         WizardChessRoutes.home: (context) => const HomeScreen(),
         WizardChessRoutes.game: (context) => const GameScreen(),
+        WizardChessRoutes.settings: (context) => const SettingsScreen(),
         // TODO: Add these screens
         // WizardChessRoutes.history: (context) => null,
       },

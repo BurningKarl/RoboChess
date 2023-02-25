@@ -25,6 +25,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Page'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.pushNamed(context, WizardChessRoutes.settings);
+            },
+            icon: const Icon(Icons.settings),
+          ),
+        ],
       ),
       body: Column(
         children: [
