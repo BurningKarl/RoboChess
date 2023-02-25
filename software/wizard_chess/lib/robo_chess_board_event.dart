@@ -7,7 +7,7 @@ enum Direction {
 
 class RoboChessBoardEvent {
   Direction direction;
-  String square;
+  int square;
 
   RoboChessBoardEvent({required this.direction, required this.square});
 

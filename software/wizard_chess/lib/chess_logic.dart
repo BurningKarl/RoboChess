@@ -17,35 +17,35 @@ extension MoveWithJson on Move {
   }
 }
 
-Move? extractMove(
+List<Move> extractCompatibleMoves(
   final Chess gameState,
   final List<RoboChessBoardEvent> events,
 ) {
-  List<int> squareOccupiedBeforeMove = List.filled(128, 0);
+  List<int> previousBoard = List.filled(128, 0);
   for (var square in gameState.board.asMap().entries) {
-    squareOccupiedBeforeMove[square.key] = square.value == null ? 0 : 1;
+    previousBoard[square.key] = square.value == null ? 0 : 1;
   }
 
-  List<int> squareOccupiedAfterMove = List.of(squareOccupiedBeforeMove);
+  List<int> currentBoard = List.of(previousBoard);
   for (var event in events) {
     switch (event.direction) {
       case Direction.up:
-        squareOccupiedAfterMove[event.square] = 0;
+        currentBoard[event.square] = 0;
         break;
       case Direction.down:
-        squareOccupiedAfterMove[event.square] = 1;
+        currentBoard[event.square] = 1;
         break;
     }
   }
 
-  List<int> squareOccupiedDifference = [
-    for (int i = 0; i < squareOccupiedBeforeMove.length; i++)
-      squareOccupiedAfterMove[i] - squareOccupiedBeforeMove[i]
+  List<int> boardDifference = [
+    for (int i = 0; i < previousBoard.length; i++)
+      currentBoard[i] - previousBoard[i]
   ];
-  print("squareOccupiedDifference: $squareOccupiedDifference");
+  print("boardDifference: $boardDifference");
 
-  int differenceTotal = squareOccupiedDifference.reduce((a, b) => a + b);
-  int changesCount = squareOccupiedDifference.reduce((a, b) => a + b.abs());
+  int differenceTotal = boardDifference.reduce((a, b) => a + b);
+  int changesCount = boardDifference.reduce((a, b) => a + b.abs());
   print("differenceTotal: $differenceTotal");
   print("changesCount: $changesCount");
 
@@ -54,85 +54,69 @@ Move? extractMove(
     // Regular move
     if (changesCount == 4) {
       // Castling
-      int flag = -1;
-      for (var rookPosition in Chess.ROOKS[gameState.turn]!) {
-        if (squareOccupiedDifference[rookPosition['square']] == -1) {
-          flag = rookPosition['flag'];
-        }
-      }
-      Move castlingMove;
-      try {
-        castlingMove =
-            legalMoves.firstWhere((move) => (move.flags & flag) != 0);
-      } on StateError {
-        return null;
-      }
-      int rookFrom = 127, rookTo = 127;
-      if (flag == Chess.BITS_KSIDE_CASTLE) {
-        rookFrom = castlingMove.to + 1;
-        rookTo = castlingMove.to - 1;
-      } else if (flag == Chess.BITS_QSIDE_CASTLE) {
-        rookFrom = castlingMove.to - 2;
-        rookTo = castlingMove.to + 1;
-      }
-      // Limitation: If someone does a castling move but swaps the final squares
-      // of rook and king, we are unable to detect this
-      if (squareOccupiedDifference[castlingMove.from] == -1 &&
-          squareOccupiedDifference[castlingMove.to] == 1 &&
-          squareOccupiedDifference[rookFrom] == -1 &&
-          squareOccupiedDifference[rookTo] == 1) {
-        return castlingMove;
-      } else {
-        return null;
-      }
-    } else if (changesCount == 2) {
-      var from =
-          squareOccupiedDifference.indexWhere((element) => element == -1);
-      var to = squareOccupiedDifference.indexWhere((element) => element == 1);
+      int flag = Chess.ROOKS[gameState.turn]!.singleWhere(
+          (rook) => boardDifference[rook['square']] == -1,
+          orElse: () => {'flag': -1})['flag'];
 
+      return legalMoves
+          .where((move) => (move.flags & flag) != 0)
+          .where((castlingMove) {
+        int rookFrom = 127, rookTo = 127;
+        if (flag == Chess.BITS_KSIDE_CASTLE) {
+          rookFrom = castlingMove.to + 1;
+          rookTo = castlingMove.to - 1;
+        } else if (flag == Chess.BITS_QSIDE_CASTLE) {
+          rookFrom = castlingMove.to - 2;
+          rookTo = castlingMove.to + 1;
+        }
+
+        // Limitation: If someone does a castling move but swaps the final squares
+        // of rook and king, we are unable to detect this
+        return boardDifference[castlingMove.from] == -1 &&
+            boardDifference[castlingMove.to] == 1 &&
+            boardDifference[rookFrom] == -1 &&
+            boardDifference[rookTo] == 1;
+      }).toList();
+    } else if (changesCount == 2) {
+      var from = boardDifference.indexWhere((element) => element == -1);
+      var to = boardDifference.indexWhere((element) => element == 1);
       print("from: $from, to: $to");
-      try {
-        return legalMoves
-            .firstWhere((move) => move.from == from && move.to == to);
-      } on StateError {
-        return null;
-      }
+
+      return legalMoves
+          .where((move) => move.from == from && move.to == to)
+          .toList();
     } else {
-      return null;
+      return List.empty();
     }
   } else if (differenceTotal == -1) {
     // Capturing move
     if (changesCount == 3) {
       // En passant
-      for (var enPassantMove in legalMoves
-          .where((move) => (move.flags & Chess.BITS_EP_CAPTURE) != 0)) {
+      return legalMoves
+          .where((move) => (move.flags & Chess.BITS_EP_CAPTURE) != 0)
+          .where((enPassantMove) {
         var opponentSquare = 127;
         if (gameState.turn == Chess.BLACK) {
           opponentSquare = enPassantMove.to - 16;
         } else {
           opponentSquare = enPassantMove.to + 16;
         }
-        if (squareOccupiedDifference[enPassantMove.from] == -1 &&
-            squareOccupiedDifference[enPassantMove.to] == 1 &&
-            squareOccupiedDifference[opponentSquare] == -1) {
-          return enPassantMove;
-        }
-      }
-      return null;
+
+        return boardDifference[enPassantMove.from] == -1 &&
+            boardDifference[enPassantMove.to] == 1 &&
+            boardDifference[opponentSquare] == -1;
+      }).toList();
     } else if (changesCount == 1) {
       // Regular capturing move
-      var from =
-          squareOccupiedDifference.indexWhere((element) => element == -1);
+      var from = boardDifference.indexWhere((element) => element == -1);
 
-      try {
-        // TODO: Promotion while taking
-        return legalMoves.firstWhere(
-            (move) => move.from == from && move.to == events.last.square);
-      } on StateError {
-        return null;
-      }
+      return legalMoves
+          .where((move) => move.from == from && move.to == events.last.square)
+          .toList();
+    } else {
+      return List.empty();
     }
   } else {
-    return null;
+    return List.empty();
   }
 }

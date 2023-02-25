@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:flutter_chess_board/flutter_chess_board.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
@@ -75,25 +74,26 @@ class _GameScreenState extends State<GameScreen> {
     });
 
     // Extract move from event history
-    var playerMove = extractMove(internalController.game, eventHistory);
+    List<Move> compatibleMoves =
+        extractCompatibleMoves(internalController.game, eventHistory);
+    print("compatibleMoves=${compatibleMoves.map((move) => move.toJson())}");
     eventHistory.clear(); // These events are outdated now
 
-    if (playerMove != null && (playerMove.flags & Chess.BITS_PROMOTION) != 0) {
+    if (compatibleMoves.length > 1 &&
+        (compatibleMoves.first.flags & Chess.BITS_PROMOTION) != 0) {
       // TODO: Ask the player for the promotion piece
-    }
-
-    print("playerMove=${playerMove?.toJson()}");
-
-    // Execute player move and check for legality
-    bool playerMoveIsLegal =
-        playerMove != null && internalController.makeMoveFromObject(playerMove);
-    if (!playerMoveIsLegal) {
+      internalController.makeMoveFromObject(compatibleMoves.first);
+    } else if (compatibleMoves.isEmpty) {
       // TODO: Make a popup that tells the user
       // When the popup is closed and the user has reset the board to the
       // previous position, clear event history and start listening  to board
       // events again
       receiveEvents = true;
       return;
+    } else {
+      // Throws an error if there is more than one compatible move or if the
+      // only compatible move is illegal
+      assert(internalController.makeMoveFromObject(compatibleMoves.single));
     }
   }
 
