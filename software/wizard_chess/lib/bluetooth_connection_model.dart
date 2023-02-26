@@ -1,33 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:wizard_chess/ndjson.dart';
 
 enum BluetoothConnectionState {
   bluetoothOff,
   disconnected,
   connecting,
   connected,
-}
-
-Stream<dynamic> jsonMessageTransform(Stream<Uint8List> rawData) async* {
-  String partialMessage = "";
-  await for (final characters in rawData) {
-    partialMessage += String.fromCharCodes(characters);
-    print("jsonMessageTransform: $partialMessage");
-
-    var lines = partialMessage.split('\n');
-    for (final line in lines.getRange(0, lines.length - 1)) {
-      var message = jsonDecode(line);
-      if (message?['version'] == 1) {
-        yield message;
-      }
-    }
-
-    partialMessage = lines.last;
-  }
 }
 
 class BluetoothConnectionModel extends Model {
@@ -99,8 +80,7 @@ class BluetoothConnectionModel extends Model {
     }
 
     if (connection != null) {
-      messageQueue.sink.addStream(connection!.input!
-          .transform(StreamTransformer.fromBind(jsonMessageTransform)));
+      messageQueue.sink.addStream(connection!.input!.toJsonStream());
     }
   }
 
