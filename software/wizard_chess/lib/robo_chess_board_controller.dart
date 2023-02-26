@@ -17,6 +17,7 @@ class RoboChessBoardController {
     print("RoboChessBoardController.makeMove");
 
     var uniqueId = _uuid.v4();
+    // TODO: Extend to a list of moves and handle capturing, castling, etc.
     String message = jsonEncode({
       'version': 1,
       'type': 'move',
