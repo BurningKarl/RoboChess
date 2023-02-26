@@ -26,7 +26,7 @@ class _GameScreenState extends State<GameScreen> {
   InternalChessBoardController internalController =
       InternalChessBoardController(Chess());
   late RoboChessBoardController roboController;
-  ChessOpponent opponent = RandomChessOpponent();
+  late ChessOpponent opponent;
 
   Future<void> onInternalMoveMade() async {
     print("onInternalMoveMade: turn=${internalController.game.turn}");
@@ -124,6 +124,8 @@ class _GameScreenState extends State<GameScreen> {
 
     internalController.addListener(onInternalMoveMade);
     onInternalMoveMade();
+
+    LichessOpponent.connect().then((value) {opponent = value;});
   }
 
   @override
