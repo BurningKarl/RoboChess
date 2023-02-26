@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_chess_board/flutter_chess_board.dart';
 import 'package:wizard_chess/ndjson.dart';
 
 class LichessClient {
@@ -17,10 +18,18 @@ class LichessClient {
     return response.data.json;
   }
 
-  Future<Stream<dynamic>> streamBoardGameState(String gameId) async {
+  Future<Stream<dynamic>> streamBoardGameState({required String gameId}) async {
     var response = await _dio.get('/board/game/stream/$gameId',
         options: Options(responseType: ResponseType.stream));
 
-    return (response.data.stream as Stream<Uint8List>).toJsonStream();
+    return (response.data.stream as Stream<Uint8List>).toJsonStream().asBroadcastStream();
+  }
+
+  Future<void> makeBoardMove(
+      {required String gameId, required Move move}) async {
+    String uciMove =
+        move.fromAlgebraic + move.toAlgebraic + (move.promotion?.name ?? "");
+    var response = await _dio.post('/board/game/$gameId/move/$uciMove');
+    assert (response.data.json['ok']);
   }
 }
