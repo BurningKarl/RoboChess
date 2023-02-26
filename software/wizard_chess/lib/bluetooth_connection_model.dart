@@ -80,7 +80,7 @@ class BluetoothConnectionModel extends Model {
     }
 
     if (connection != null) {
-      messageQueue.sink.addStream(connection!.input!.toJsonStream());
+      messageQueue.sink.addStream(connection!.input!.toJsonStream().where((event) => event['version'] == 1).asBroadcastStream());
     }
   }
 

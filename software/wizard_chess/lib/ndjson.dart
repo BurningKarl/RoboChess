@@ -10,10 +10,10 @@ extension RawNdJsonStream on Stream<Uint8List> {
 
       var lines = partialMessage.split('\n');
       for (final line in lines.getRange(0, lines.length - 1)) {
-        var message = jsonDecode(line);
-        if (message?['version'] == 1) {
-          yield message;
+        if (line.trim() == "") {
+          continue;
         }
+        yield jsonDecode(line);
       }
 
       partialMessage = lines.last;
