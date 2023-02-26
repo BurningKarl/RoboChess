@@ -56,7 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> openLichessApiKeyPopup(BuildContext context) async {
     final Uri lichessOauthUrl =
-        Uri.parse('https://lichess.org/account/oauth/token');
+        Uri.parse('https://lichess.org/account/oauth/token/create?scopes[]=challenge:write&scopes[]=board:play&description=RoboChess');
     GlobalKey<FormState> formKey = GlobalKey();
 
     await showDialog(
