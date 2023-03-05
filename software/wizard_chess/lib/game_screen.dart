@@ -8,11 +8,16 @@ import 'package:wizard_chess/bluetooth_connection_widget.dart';
 import 'package:wizard_chess/internal_chess_board_controller.dart';
 import 'package:wizard_chess/robo_chess_board_event.dart';
 import 'package:wizard_chess/robo_chess_board_controller.dart';
+import 'package:wizard_chess/lichess_client.dart';
+import 'package:wizard_chess/lichess_controller.dart';
 import 'package:wizard_chess/chess_logic.dart';
-import 'package:wizard_chess/chess_opponent.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({Key? key}) : super(key: key);
+  final String authorizationCode;
+  final String gameId;
+  const GameScreen(
+      {Key? key, required this.authorizationCode, required this.gameId})
+      : super(key: key);
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -26,29 +31,22 @@ class _GameScreenState extends State<GameScreen> {
   InternalChessBoardController internalController =
       InternalChessBoardController(Chess());
   late RoboChessBoardController roboController;
-  late ChessOpponent opponent;
+  late LichessController lichessController;
 
-  Future<void> onInternalMoveMade() async {
-    print("onInternalMoveMade: turn=${internalController.game.turn}");
-    // TODO: Handle end of game
+  Future<void> onLichessMoveMade() async {
+    final lichessHistory = lichessController.moves;
+    final internalHistory = internalController.game.history;
 
-    if (internalController.game.turn == playerColor) {
-      // Start listening to board events, one of which will indicate that the
-      // players move is done
-      receiveEvents = true;
-    } else {
-      late Move opponentMove; // Makes name available outside of try scope
-      try {
-        opponentMove = await opponent.calculateMove(internalController.game);
-      } on Exception catch (e) {
-        // TODO: Make a popup that tells the user
-        // Options: Save game now and quit or retry
-        // SystemNavigator.pop();
-        print(e);
-        return;
-      }
-
-      print("opponentMove=${opponentMove.toJson()}");
+    if (lichessHistory.length == internalHistory.length) {
+      assert(Iterable.generate(lichessHistory.length,
+              (i) => lichessHistory[i].compatibleWith(internalHistory[i].move))
+          .every((e) => e));
+    } else if (lichessHistory.length == internalHistory.length + 1 &&
+        internalController.game.turn != playerColor) {
+      LichessMove lichessMove = lichessController.moves.last;
+      Move opponentMove = internalController.game
+          .generate_moves()
+          .singleWhere(lichessMove.compatibleWith);
 
       try {
         // Execute opponent move on physical chess board
@@ -59,6 +57,24 @@ class _GameScreenState extends State<GameScreen> {
       }
 
       internalController.makeMoveFromObject(opponentMove);
+    } else {
+      // TODO: Popup
+      throw Exception("Lichess move during player turn");
+    }
+  }
+
+  Future<void> onInternalMoveMade() async {
+    print("onInternalMoveMade: turn=${internalController.game.turn}");
+    // TODO: Handle end of game
+
+    if (internalController.game.turn == playerColor) {
+      // Start listening to board events, one of which will indicate that the
+      // players move is done
+      receiveEvents = true;
+    } else {
+      if (internalController.game.history.isNotEmpty) {
+        lichessController.makeMove(internalController.game.history.last.move);
+      }
     }
   }
 
@@ -103,6 +119,7 @@ class _GameScreenState extends State<GameScreen> {
       var event = RoboChessBoardEvent.fromJson(eventData);
 
       if (event.square == 1 << 8) {
+        // Button (square number 2^9 = 256) pressed
         if (event.direction == Direction.up) {
           // The user is done with their move
           await onPlayerMoveFinished();
@@ -122,10 +139,14 @@ class _GameScreenState extends State<GameScreen> {
 
     roboController = RoboChessBoardController(bluetooth: model);
 
+    // TODO: Initialize internal controller with Lichess controller
     internalController.addListener(onInternalMoveMade);
     onInternalMoveMade();
 
-    LichessOpponent.connect().then((value) {opponent = value;});
+    lichessController = LichessController(
+        client: LichessClient(authorizationCode: widget.authorizationCode),
+        gameId: widget.gameId);
+    lichessController.addListener(onLichessMoveMade);
   }
 
   @override

@@ -21,12 +21,17 @@ class WizardChessApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      routes: {
-        WizardChessRoutes.home: (context) => const HomeScreen(),
-        WizardChessRoutes.game: (context) => const GameScreen(),
-        WizardChessRoutes.settings: (context) => const SettingsScreen(),
-        // TODO: Add these screens
-        // WizardChessRoutes.history: (context) => null,
+      onGenerateRoute: (RouteSettings settings) {
+        Map<String, WidgetBuilder> routes = {
+          WizardChessRoutes.home: (context) => const HomeScreen(),
+          WizardChessRoutes.game: (context) {
+            final arguments = settings.arguments! as List<String>;
+            return GameScreen(authorizationCode: arguments[0], gameId: arguments[1]); },
+          WizardChessRoutes.settings: (context) => const SettingsScreen(),
+          // TODO: Add these screens
+          // WizardChessRoutes.history: (context) => null,
+        };
+        return MaterialPageRoute(builder: routes[settings.name]!);
       },
     );
 

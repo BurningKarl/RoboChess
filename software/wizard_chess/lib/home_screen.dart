@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
 import 'package:wizard_chess/bluetooth_connection_widget.dart';
+import 'package:wizard_chess/lichess_client.dart';
 import 'package:wizard_chess/routes.dart';
+import 'package:wizard_chess/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,6 +15,18 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  void startAiGame() async {
+    var preferences = await SharedPreferences.getInstance();
+    String authorizationCode =
+        preferences.getString(SettingsKeys.lichessApiKey) ?? "";
+    LichessClient client = LichessClient(authorizationCode: authorizationCode);
+    String gameId = (await client.challengeAi())['id'];
+    if (context.mounted) {
+      Navigator.pushNamed(context, WizardChessRoutes.game,
+          arguments: [authorizationCode, gameId]);
+    }
+  }
+
   @override
   void dispose() {
     var model = ScopedModel.of<BluetoothConnectionModel>(context);
@@ -22,6 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // TODO: Show list of open Lichess games on home screen
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Page'),
@@ -48,9 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Card(
                 child: ListTile(
                   title: const Text('Play against the computer'),
-                  onTap: () {
-                    Navigator.pushNamed(context, WizardChessRoutes.game);
-                  },
+                  onTap: startAiGame,
                 ),
               )
             ],
