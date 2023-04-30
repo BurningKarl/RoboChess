@@ -14,19 +14,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final GlobalKey<RefreshIndicatorState> refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  final GlobalKey<RefreshIndicatorState> refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
 
   Settings settings = Settings();
   late LichessClient lichessClient;
   List<dynamic> ongoingGames = [];
-
-  void startAiGame() async {
-    String gameId = (await lichessClient.challengeAi())['id'];
-    if (context.mounted) {
-      Navigator.pushNamed(context, WizardChessRoutes.game,
-          arguments: [lichessClient, gameId]);
-    }
-  }
 
   // TODO: Call whenever the API key is updated
   void initLichessClient() {
@@ -39,6 +32,13 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       ongoingGames = games;
     });
+  }
+
+  Future<void> startGame() async {
+    // TODO: Add new game selection popup
+    // Challenge friend or AI (which difficulty?)
+    // Which side do you want to play?
+    await lichessClient.challengeAi();
   }
 
   @override
@@ -71,19 +71,24 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Home Page'),
         actions: [
           IconButton(
+              onPressed: () async {
+                await startGame();
+                refreshIndicatorKey.currentState?.show();
+              },
+              icon: const Icon(Icons.add)),
+          IconButton(
             onPressed: () {
               Navigator.pushNamed(context, WizardChessRoutes.settings);
             },
             icon: const Icon(Icons.settings),
           ),
-          // TODO: Add button to create new game
         ],
       ),
       body: Column(
         children: [
           Expanded(
               child: RefreshIndicator(
-                key: refreshIndicatorKey,
+                  key: refreshIndicatorKey,
                   onRefresh: loadGames,
                   child: ListView.builder(
                       itemCount: ongoingGames.length,
