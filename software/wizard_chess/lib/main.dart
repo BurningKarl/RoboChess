@@ -26,7 +26,7 @@ class WizardChessApp extends StatelessWidget {
         Map<String, WidgetBuilder> routes = {
           WizardChessRoutes.home: (context) => const HomeScreen(),
           WizardChessRoutes.game: (context) {
-            final arguments = settings.arguments! as List<Object>;
+            final arguments = settings.arguments! as List<dynamic>;
             return GameScreen(
                 lichessClient: arguments[0] as LichessClient,
                 gameId: arguments[1] as String);

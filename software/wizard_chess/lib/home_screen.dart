@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
 import 'package:wizard_chess/bluetooth_connection_widget.dart';
 import 'package:wizard_chess/lichess_client.dart';
 import 'package:wizard_chess/routes.dart';
-import 'package:wizard_chess/settings_screen.dart';
+import 'package:wizard_chess/settings.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,8 +14,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<dynamic> ongoingGames = [];
+  final GlobalKey<RefreshIndicatorState> refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+
+  Settings settings = Settings();
   late LichessClient lichessClient;
+  List<dynamic> ongoingGames = [];
 
   void startAiGame() async {
     String gameId = (await lichessClient.challengeAi())['id'];
@@ -27,10 +29,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // TODO: Call whenever the API key is updated
-  Future<void> initLichessClient() async {
-    var preferences = await SharedPreferences.getInstance();
-    String authorizationCode =
-        preferences.getString(SettingsKeys.lichessApiKey) ?? "";
+  void initLichessClient() {
+    String authorizationCode = settings.getString(Settings.lichessApiKey) ?? "";
     lichessClient = LichessClient(authorizationCode: authorizationCode);
   }
 
@@ -46,7 +46,14 @@ class _HomeScreenState extends State<HomeScreen> {
     print("initState");
     super.initState();
 
-    initLichessClient().whenComplete(loadGames);
+    // If the API key changes (and at startup) ...
+    settings.addListener(() {
+      // ... initialize the lichess client and ...
+      initLichessClient();
+
+      // ... reload the current games (calls onRefresh, i.e. loadGames).
+      refreshIndicatorKey.currentState?.show();
+    });
   }
 
   @override
@@ -76,11 +83,14 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Expanded(
               child: RefreshIndicator(
+                key: refreshIndicatorKey,
                   onRefresh: loadGames,
                   child: ListView.builder(
                       itemCount: ongoingGames.length,
                       itemBuilder: (context, index) {
                         dynamic game = ongoingGames[index];
+                        // TODO: Improve the UI for these cards
+                        // https://lichess.org/api#tag/Games/operation/apiAccountPlaying
                         return Card(
                           child: ListTile(
                             title: Text(game["opponent"]["username"]),

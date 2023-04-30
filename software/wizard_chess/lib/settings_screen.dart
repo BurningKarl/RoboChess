@@ -1,12 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:settings_ui/settings_ui.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-class SettingsKeys {
-  static const String lichessApiKey = 'lichess-api-key';
-}
+import 'package:wizard_chess/settings.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -16,47 +12,37 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  SharedPreferences? preferences;
-
-  @override
-  void initState() {
-    super.initState();
-
-    SharedPreferences.getInstance().then((value) {
-      setState(() {
-        preferences = value;
-      });
-    });
-  }
+  Settings settings = Settings();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
-      body: SettingsList(
-        sections: [
-          SettingsSection(
-            title: const Text('Lichess'),
-            tiles: [
-              SettingsTile(
-                title: const Text('API access token'),
-                value: Text(
-                    preferences?.getString(SettingsKeys.lichessApiKey) ??
-                        'Not set'),
-                onPressed: openLichessApiKeyPopup,
-              )
-            ],
-          )
-        ],
-      ),
-    );
+        appBar: AppBar(
+          title: const Text('Settings'),
+        ),
+        body: AnimatedBuilder(
+            animation: settings,
+            builder: (context, widget) => SettingsList(
+                  sections: [
+                    SettingsSection(
+                      title: const Text('Lichess'),
+                      tiles: [
+                        SettingsTile(
+                          title: const Text('API access token'),
+                          value: Text(
+                              settings.getString(Settings.lichessApiKey) ??
+                                  'Not set'),
+                          onPressed: openLichessApiKeyPopup,
+                        )
+                      ],
+                    )
+                  ],
+                )));
   }
 
   Future<void> openLichessApiKeyPopup(BuildContext context) async {
-    final Uri lichessOauthUrl =
-        Uri.parse('https://lichess.org/account/oauth/token/create?scopes[]=challenge:write&scopes[]=board:play&description=RoboChess');
+    final Uri lichessOauthUrl = Uri.parse(
+        'https://lichess.org/account/oauth/token/create?scopes[]=challenge:write&scopes[]=board:play&description=RoboChess');
     GlobalKey<FormState> formKey = GlobalKey();
 
     await showDialog(
@@ -92,17 +78,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Form(
                     key: formKey,
                     child: TextFormField(
-                      initialValue:
-                          preferences?.getString(SettingsKeys.lichessApiKey),
+                      initialValue: settings.getString(Settings.lichessApiKey),
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                       ),
                       onSaved: (String? result) {
                         if (result != null) {
-                          setState(() {
-                            preferences?.setString(
-                                SettingsKeys.lichessApiKey, result);
-                          });
+                          settings.setString(Settings.lichessApiKey, result);
                         }
                       },
                     ),
