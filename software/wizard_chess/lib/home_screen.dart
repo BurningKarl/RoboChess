@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String gameId = (await client.challengeAi())['id'];
     if (context.mounted) {
       Navigator.pushNamed(context, WizardChessRoutes.game,
-          arguments: [authorizationCode, gameId]);
+          arguments: [client, gameId]);
     }
   }
 

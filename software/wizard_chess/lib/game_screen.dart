@@ -13,10 +13,10 @@ import 'package:wizard_chess/lichess_controller.dart';
 import 'package:wizard_chess/chess_logic.dart';
 
 class GameScreen extends StatefulWidget {
-  final String authorizationCode;
+  final LichessClient lichessClient;
   final String gameId;
   const GameScreen(
-      {Key? key, required this.authorizationCode, required this.gameId})
+      {Key? key, required this.lichessClient, required this.gameId})
       : super(key: key);
 
   @override
@@ -144,7 +144,7 @@ class _GameScreenState extends State<GameScreen> {
     onInternalMoveMade();
 
     lichessController = LichessController(
-        client: LichessClient(authorizationCode: widget.authorizationCode),
+        client: widget.lichessClient,
         gameId: widget.gameId);
     lichessController.addListener(onLichessMoveMade);
   }
