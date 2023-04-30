@@ -15,16 +15,38 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<dynamic> ongoingGames = [];
+  late LichessClient lichessClient;
+
   void startAiGame() async {
+    String gameId = (await lichessClient.challengeAi())['id'];
+    if (context.mounted) {
+      Navigator.pushNamed(context, WizardChessRoutes.game,
+          arguments: [lichessClient, gameId]);
+    }
+  }
+
+  // TODO: Call whenever the API key is updated
+  Future<void> initLichessClient() async {
     var preferences = await SharedPreferences.getInstance();
     String authorizationCode =
         preferences.getString(SettingsKeys.lichessApiKey) ?? "";
-    LichessClient client = LichessClient(authorizationCode: authorizationCode);
-    String gameId = (await client.challengeAi())['id'];
-    if (context.mounted) {
-      Navigator.pushNamed(context, WizardChessRoutes.game,
-          arguments: [client, gameId]);
-    }
+    lichessClient = LichessClient(authorizationCode: authorizationCode);
+  }
+
+  Future<void> loadGames() async {
+    List<dynamic> games = await lichessClient.getOngoingGames();
+    setState(() {
+      ongoingGames = games;
+    });
+  }
+
+  @override
+  void initState() {
+    print("initState");
+    super.initState();
+
+    initLichessClient().whenComplete(loadGames);
   }
 
   @override
@@ -37,8 +59,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Show list of open Lichess games on home screen
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Page'),
@@ -49,27 +69,31 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             icon: const Icon(Icons.settings),
           ),
+          // TODO: Add button to create new game
         ],
       ),
       body: Column(
         children: [
           Expanded(
-              child: ListView(
-            children: [
-              Card(
-                child: ListTile(
-                  title: const Text('Play remotely'),
-                  onTap: () {},
-                ),
-              ),
-              Card(
-                child: ListTile(
-                  title: const Text('Play against the computer'),
-                  onTap: startAiGame,
-                ),
-              )
-            ],
-          )),
+              child: RefreshIndicator(
+                  onRefresh: loadGames,
+                  child: ListView.builder(
+                      itemCount: ongoingGames.length,
+                      itemBuilder: (context, index) {
+                        dynamic game = ongoingGames[index];
+                        return Card(
+                          child: ListTile(
+                            title: Text(game["opponent"]["username"]),
+                            onTap: () {
+                              if (context.mounted) {
+                                Navigator.pushNamed(
+                                    context, WizardChessRoutes.game,
+                                    arguments: [lichessClient, game["gameId"]]);
+                              }
+                            },
+                          ),
+                        );
+                      }))),
           const BluetoothConnectionWidget(),
         ],
       ),

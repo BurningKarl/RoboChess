@@ -12,6 +12,11 @@ class LichessClient {
     _dio.options.baseUrl = "https://lichess.org/api";
   }
 
+  Future<List<dynamic>> getOngoingGames() async {
+    var response = await _dio.get('/account/playing', data: {'nb': 50});
+    return response.data['nowPlaying'];
+  }
+
   Future<dynamic> challengeAi() async {
     var response =
         await _dio.post('/challenge/ai', data: {'level': 1, 'color': 'white'});
