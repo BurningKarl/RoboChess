@@ -62,7 +62,12 @@ class BluetoothConnectionModel extends Model {
     connecting = true;
     notifyListeners();
 
-    if (!(await Permission.bluetooth.request()).isGranted) {
+    if (!(await Permission.bluetooth.request()).isGranted || !(await Permission.location.request()).isGranted) {
+      connecting = false;
+      notifyListeners();
+
+      // TODO: Explain that we need precise location permission to connect
+      // to the board via Bluetooth
       return;
     }
 
