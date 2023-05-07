@@ -5,11 +5,17 @@ class Settings with ChangeNotifier {
   static const String lichessApiKey = 'lichess-api-key';
   SharedPreferences? preferences;
 
-  Settings() {
+  static final Settings _singleton = Settings._();
+
+  Settings._() {
     SharedPreferences.getInstance().then((value) {
       preferences = value;
       notifyListeners();
     });
+  }
+
+  factory Settings.getInstance() {
+    return _singleton;
   }
 
   Object? get(String key) {

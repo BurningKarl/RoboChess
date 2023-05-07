@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
@@ -17,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<RefreshIndicatorState> refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
 
-  Settings settings = Settings();
+  Settings settings = Settings.getInstance();
   late LichessClient lichessClient;
   List<dynamic> ongoingGames = [];
 
@@ -28,10 +29,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadGames() async {
-    List<dynamic> games = await lichessClient.getOngoingGames();
-    setState(() {
-      ongoingGames = games;
-    });
+    try {
+      List<dynamic> games = await lichessClient.getOngoingGames();
+      setState(() {
+        ongoingGames = games;
+      });
+    } on DioError catch (e) {
+      setState(() {
+        ongoingGames = [];
+      });
+      if (e.response?.statusCode == 401) {
+        // TODO: Ask user to provide an authorization code
+      } else {
+        // TODO: Show generic internet issues popup
+      }
+    }
   }
 
   Future<void> startGame() async {

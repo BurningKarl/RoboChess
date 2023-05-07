@@ -12,7 +12,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  Settings settings = Settings();
+  Settings settings = Settings.getInstance();
 
   @override
   Widget build(BuildContext context) {
