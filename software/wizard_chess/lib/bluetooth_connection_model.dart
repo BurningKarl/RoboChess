@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:wizard_chess/ndjson.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 enum BluetoothConnectionState {
   bluetoothOff,
@@ -61,7 +62,9 @@ class BluetoothConnectionModel extends Model {
     connecting = true;
     notifyListeners();
 
-    // TODO: Request Bluetooth permissions before connecting
+    if (!(await Permission.bluetooth.request()).isGranted) {
+      return;
+    }
 
     try {
       BluetoothDiscoveryResult result = await FlutterBluetoothSerial.instance
@@ -80,7 +83,10 @@ class BluetoothConnectionModel extends Model {
     }
 
     if (connection != null) {
-      messageQueue.sink.addStream(connection!.input!.toJsonStream().where((event) => event['version'] == 1).asBroadcastStream());
+      messageQueue.sink.addStream(connection!.input!
+          .toJsonStream()
+          .where((event) => event['version'] == 1)
+          .asBroadcastStream());
     }
   }
 

@@ -44,6 +44,7 @@ dependencies:
   shared_preferences: ^2.0.17
   url_launcher: ^6.1.9
   dio: ^5.0.1
+  permission_handler: ^10.2.0
 
 dev_dependencies:
   flutter_test:
