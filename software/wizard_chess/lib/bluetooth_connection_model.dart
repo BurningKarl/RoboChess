@@ -12,6 +12,12 @@ enum BluetoothConnectionState {
   connected,
 }
 
+enum BluetoothConnectionFailure {
+  missingPermissions,
+  boardNotFound,
+  bluetoothError,
+}
+
 class BluetoothConnectionModel extends Model {
   final String chessboardName = "HC-06";
   BluetoothState bluetoothState = BluetoothState.UNKNOWN;
@@ -58,17 +64,16 @@ class BluetoothConnectionModel extends Model {
     }
   }
 
-  Future<void> tryToConnect() async {
+  Future<BluetoothConnectionFailure?> tryToConnect() async {
     connecting = true;
     notifyListeners();
 
-    if (!(await Permission.bluetooth.request()).isGranted || !(await Permission.location.request()).isGranted) {
+    if (!(await Permission.bluetooth.request()).isGranted ||
+        !(await Permission.location.request()).isGranted) {
       connecting = false;
       notifyListeners();
 
-      // TODO: Explain that we need precise location permission to connect
-      // to the board via Bluetooth
-      return;
+      return BluetoothConnectionFailure.missingPermissions;
     }
 
     try {
@@ -78,10 +83,12 @@ class BluetoothConnectionModel extends Model {
       connection = await BluetoothConnection.toAddress(result.device.address);
     } on StateError {
       // The chessboard was not found (error thrown by firstWhere)
+      return BluetoothConnectionFailure.boardNotFound;
     } catch (error) {
       // Probably a Bluetooth error
       print("Error:");
       print(error);
+      return BluetoothConnectionFailure.bluetoothError;
     } finally {
       connecting = false;
       notifyListeners();
@@ -92,6 +99,9 @@ class BluetoothConnectionModel extends Model {
           .toJsonStream()
           .where((event) => event['version'] == 1)
           .asBroadcastStream());
+      return null;
+    } else {
+      return BluetoothConnectionFailure.bluetoothError;
     }
   }
 

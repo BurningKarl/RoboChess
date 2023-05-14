@@ -6,6 +6,44 @@ import 'package:wizard_chess/bluetooth_connection_model.dart';
 class BluetoothConnectionWidget extends StatelessWidget {
   const BluetoothConnectionWidget({super.key});
 
+  Future<void> showFailurePopup(
+      BuildContext context, BluetoothConnectionFailure failure) async {
+    String message = "";
+    switch (failure) {
+      case BluetoothConnectionFailure.missingPermissions:
+        message =
+            "Permission for nearby devices and precise device location are necessary to connect to the chess board.";
+        break;
+      case BluetoothConnectionFailure.boardNotFound:
+        message =
+            "The chess board could not be found. Please ensure it is turned on.";
+        break;
+      case BluetoothConnectionFailure.bluetoothError:
+        message = "A Bluetooth error occurred. Please try again.";
+        break;
+    }
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Connection Failed'),
+          content: SingleChildScrollView(
+            child: Text(message),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close pop-up
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScopedModelDescendant<BluetoothConnectionModel>(
@@ -27,7 +65,12 @@ class BluetoothConnectionWidget extends StatelessWidget {
             title: const Text("No connection"),
             leading: const Icon(Icons.bluetooth, color: Colors.red),
             trailing: TextButton(
-              onPressed: model.tryToConnect,
+              onPressed: () async {
+                var failure = await model.tryToConnect();
+                if (failure != null && context.mounted) {
+                  showFailurePopup(context, failure);
+                }
+              },
               child: const Text('CONNECT'),
             ),
           );
