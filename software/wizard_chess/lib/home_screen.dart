@@ -162,6 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ? "forever"
                             : "${game['secondsLeft']} seconds";
                         return Card(
+                          key: Key(game["gameId"] as String),
                           child: ListTile(
                             leading: Pawn(
                               fillColor: game["color"] == "white"
