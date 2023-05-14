@@ -157,14 +157,53 @@ class _GameScreenState extends State<GameScreen> {
       ),
       body: Column(
         children: [
-          ChessBoard(
-            controller: internalController,
-            boardOrientation: PlayerColor.white,
-            // TODO: Disable user moves, currently useful for debugging
-            // enableUserMoves: false,
-          ),
+          Padding(
+              padding: EdgeInsets.all(8),
+              child: ChessBoard(
+                controller: internalController,
+                boardOrientation: PlayerColor.white,
+                // TODO: Disable user moves, currently useful for debugging
+                // enableUserMoves: false,
+              )),
           Expanded(
-            child: Text(screenContent),
+            child: ListView(
+              children: <Widget>[
+                Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Table(
+                      border: TableBorder.all(),
+                      columnWidths: <int, TableColumnWidth>{
+                        0: IntrinsicColumnWidth(),
+                        1: FlexColumnWidth(),
+                        2: FlexColumnWidth(),
+                      },
+                      children: <TableRow>[
+                        TableRow(children: <Widget>[
+                          Text("1"),
+                          Text("e4"),
+                          Text("e5"),
+                        ]),
+                        TableRow(
+                          children: <Widget>[
+                            Text("1"),
+                            Text("e4"),
+                            Text("e5"),
+                          ],
+                        ),
+                        TableRow(children: <Widget>[
+                          Text("1"),
+                          Text("e4"),
+                          Text("e5"),
+                        ]),
+                        TableRow(children: <Widget>[
+                          Text("1"),
+                          Text("e4"),
+                          Text("e5"),
+                        ])
+                      ],
+                    ))
+              ],
+            ),
           ),
           const BluetoothConnectionWidget(),
         ],
