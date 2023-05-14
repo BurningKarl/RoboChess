@@ -39,6 +39,7 @@ class _GameScreenState extends State<GameScreen> {
   Future<void> Function() errorResolvedFunction = () async {};
 
   Future<void> onLichessMoveMade() async {
+    print("onLichessMoveMade");
     final lichessHistory = lichessController.moves;
     final internalHistory = internalController.game.history;
 
@@ -144,13 +145,22 @@ class _GameScreenState extends State<GameScreen> {
 
     roboController = RoboChessBoardController(bluetooth: model);
 
-    // TODO: Initialize internal controller with Lichess controller
+    lichessController = LichessController(
+        client: widget.lichessClient,
+        gameId: widget.gameId,
+        onInitialized: onLichessControllerInitialized);
+    lichessController.addListener(onLichessMoveMade);
+  }
+
+  void onLichessControllerInitialized() {
+    for (var lichessMove in lichessController.moves) {
+      internalController.makeMoveFromObject(internalController.game
+          .generate_moves()
+          .singleWhere(lichessMove.compatibleWith));
+    }
+
     internalController.addListener(onInternalMoveMade);
     onInternalMoveMade();
-
-    lichessController =
-        LichessController(client: widget.lichessClient, gameId: widget.gameId);
-    lichessController.addListener(onLichessMoveMade);
   }
 
   @override

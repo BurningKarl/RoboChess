@@ -27,8 +27,12 @@ class LichessController extends ChangeNotifier {
   LichessClient client;
   String gameId;
   List<LichessMove> moves = [];
+  void Function() onInitialized;
 
-  LichessController({required this.client, required this.gameId}) {
+  LichessController(
+      {required this.client,
+      required this.gameId,
+      required this.onInitialized}) {
     client.streamBoardGameState(gameId: gameId).then((stream) {
       stream.listen(onBoardGameStateChanged, cancelOnError: true);
       // TODO: Add an onError handler to catch network errors
@@ -43,6 +47,12 @@ class LichessController extends ChangeNotifier {
           .map(LichessMove.fromUci)
           .toList();
       notifyListeners();
+    } else if (event['type'] == 'gameFull') {
+      moves = (event['state']['moves'] as String)
+          .split(' ')
+          .map(LichessMove.fromUci)
+          .toList();
+      onInitialized();
     }
   }
 
