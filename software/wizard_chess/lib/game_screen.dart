@@ -181,18 +181,24 @@ class _GameScreenState extends State<GameScreen> {
     Color rowAccentColor = Theme.of(context).colorScheme.background;
     Color rowNormalColor = Theme.of(context).colorScheme.surface;
 
-    TableRow makeRow(List<String> content, {required Color backgroundColor,
-        TextAlign? textAlign, TextStyle? textStyle}) {
+    TableRow makeRow(List<String> content,
+        {required Color backgroundColor, TextStyle? textStyle}) {
       return TableRow(
           children: content
-              .map((c) => Container(
-                    color: backgroundColor,
-                    child: Text(
-                      c,
-                      textAlign: textAlign,
-                      style: textStyle,
-                    ),
-                  ))
+              .asMap()
+              .map((index, cell) => MapEntry(
+                  index,
+                  Container(
+                      color: backgroundColor,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4.0),
+                        child: Text(
+                          cell,
+                          textAlign: index == 0 ? TextAlign.center : null,
+                          style: textStyle,
+                        ),
+                      ))))
+              .values
               .toList());
     }
 
@@ -204,7 +210,9 @@ class _GameScreenState extends State<GameScreen> {
       },
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       children: <TableRow>[
-        makeRow(["", "You", "Opponent"], backgroundColor: rowAccentColor, textStyle: Theme.of(context).textTheme.titleMedium),
+        makeRow(["", "You", "Opponent"],
+            backgroundColor: rowAccentColor,
+            textStyle: Theme.of(context).textTheme.titleMedium),
         makeRow(["1", "♙e4", "♙e5"], backgroundColor: rowNormalColor),
         makeRow(["2", "♙e4", "♙e5"], backgroundColor: rowAccentColor),
         makeRow(["3", "♙e4", "♙e5"], backgroundColor: rowNormalColor),
@@ -233,12 +241,14 @@ class _GameScreenState extends State<GameScreen> {
                       ),
                       SizedBox(height: 16),
                       Expanded(
+                          child: Container(
+                        decoration: BoxDecoration(border: Border.all(width: 2)),
                         child: ListView(
                           children: <Widget>[
                             movesTable,
                           ],
                         ),
-                      ),
+                      )),
                     ]),
           )),
           const BluetoothConnectionWidget()
