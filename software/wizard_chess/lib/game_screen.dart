@@ -79,8 +79,14 @@ class _GameScreenState extends State<GameScreen> {
 
       internalController.makeMoveFromObject(opponentMove);
     } else {
-      // TODO: Popup
-      throw Exception("Lichess move during player turn");
+      await showErrorMessage(
+          "You made a move on Lichess instead of on the physical board. "
+              "Please go back and select the game from the game selection screen again",
+          "EXIT");
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+      // throw Exception("Lichess move during player turn");
     }
   }
 
