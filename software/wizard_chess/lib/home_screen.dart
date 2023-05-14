@@ -8,8 +8,7 @@ import 'package:wizard_chess/lichess_client.dart';
 import 'package:wizard_chess/routes.dart';
 import 'package:wizard_chess/settings.dart';
 
-
-/// White pawn vector
+/// White pawn vector (stolen from chess_vectors_flutter.dart)
 class Pawn extends VectorBase {
   final Color fillColor;
   final Color strokeColor;
@@ -59,6 +58,12 @@ class Pawn extends VectorBase {
         );
 }
 
+enum LichessConnectionFailure {
+  missingAuthorizationCode,
+  invalidAuthorizationCode,
+  otherError,
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -79,7 +84,62 @@ class _HomeScreenState extends State<HomeScreen> {
     lichessClient = LichessClient(authorizationCode: authorizationCode);
   }
 
-  Future<void> loadGames() async {
+  Future<void> showFailurePopup(
+      BuildContext context, LichessConnectionFailure failure) {
+    String message;
+    switch (failure) {
+      case LichessConnectionFailure.missingAuthorizationCode:
+        message = "A Lichess account is required to use this app. "
+            "To connect to your Lichess account, please open the settings menu and enter your access token.";
+        break;
+      case LichessConnectionFailure.invalidAuthorizationCode:
+        message =
+            "The Lichess access token you provided is invalid, please open the settings menu and enter a new access token.";
+        break;
+      case LichessConnectionFailure.otherError:
+        message =
+            "An error occurred while connecting to the Lichess server, please make sure you are connected to the internet and try again.";
+        break;
+    }
+
+    TextButton acceptButton;
+    switch (failure) {
+      case LichessConnectionFailure.missingAuthorizationCode:
+      case LichessConnectionFailure.invalidAuthorizationCode:
+        acceptButton = TextButton(
+          child: const Text('SETTINGS'),
+          onPressed: () {
+            Navigator.of(context).pop(); // Close pop-up
+            Navigator.pushNamed(context, WizardChessRoutes.settings);
+          },
+        );
+        break;
+
+      case LichessConnectionFailure.otherError:
+        acceptButton = TextButton(
+          child: const Text('OK'),
+          onPressed: () {
+            Navigator.of(context).pop(); // Close pop-up
+          },
+        );
+        break;
+    }
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Connection Failed'),
+          content: SingleChildScrollView(
+            child: Text(message),
+          ),
+          actions: [acceptButton],
+        );
+      },
+    );
+  }
+
+  Future<void> loadGames(BuildContext context) async {
     try {
       List<dynamic> games = await lichessClient.getOngoingGames();
       setState(() {
@@ -90,9 +150,15 @@ class _HomeScreenState extends State<HomeScreen> {
         ongoingGames = [];
       });
       if (e.response?.statusCode == 401) {
-        // TODO: Ask user to provide an authorization code
+        if (lichessClient.authorizationCode == "") {
+          showFailurePopup(
+              context, LichessConnectionFailure.missingAuthorizationCode);
+        } else {
+          showFailurePopup(
+              context, LichessConnectionFailure.invalidAuthorizationCode);
+        }
       } else {
-        // TODO: Show generic internet issues popup
+        showFailurePopup(context, LichessConnectionFailure.otherError);
       }
     }
   }
@@ -152,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(
               child: RefreshIndicator(
                   key: refreshIndicatorKey,
-                  onRefresh: loadGames,
+                  onRefresh: () => loadGames(context),
                   child: ListView.builder(
                       itemCount: ongoingGames.length,
                       itemBuilder: (context, index) {

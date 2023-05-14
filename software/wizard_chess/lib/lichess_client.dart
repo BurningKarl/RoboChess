@@ -6,8 +6,9 @@ import 'package:wizard_chess/ndjson.dart';
 
 class LichessClient {
   final Dio _dio = Dio();
+  final String authorizationCode;
 
-  LichessClient({required String authorizationCode}) {
+  LichessClient({required this.authorizationCode}) {
     _dio.options.headers.addAll({'Authorization': 'Bearer $authorizationCode'});
     _dio.options.baseUrl = "https://lichess.org/api";
   }
