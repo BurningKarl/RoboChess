@@ -124,7 +124,11 @@ class _GameScreenState extends State<GameScreen> {
       // TODO: Ask the player for the promotion piece
       internalController.makeMoveFromObject(compatibleMoves.first);
     } else if (compatibleMoves.isEmpty) {
-      // TODO: Make a popup that tells the user
+      await showErrorMessage(
+          "The move you made is not legal. "
+              "Please undo your last move on the board by restoring the board state shown below.",
+          "DONE");
+
       // When the popup is closed and the user has reset the board to the
       // previous position, clear event history and start listening  to board
       // events again
