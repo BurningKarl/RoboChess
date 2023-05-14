@@ -7,6 +7,7 @@ import 'package:flutter_chess_board/flutter_chess_board.dart' as flutter_chess;
 import 'package:wizard_chess/bluetooth_connection_model.dart';
 import 'package:wizard_chess/bluetooth_connection_widget.dart';
 import 'package:wizard_chess/internal_chess_board_controller.dart';
+import 'package:wizard_chess/moves_table.dart';
 import 'package:wizard_chess/robo_chess_board_event.dart';
 import 'package:wizard_chess/robo_chess_board_controller.dart';
 import 'package:wizard_chess/lichess_client.dart';
@@ -155,6 +156,8 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     ColorScheme colorScheme = Theme.of(context).colorScheme;
+    TextStyle onErrorStyle = TextStyle(color: colorScheme.onErrorContainer);
+    TextStyle? tableHeaderStyle = Theme.of(context).textTheme.titleMedium;
 
     List<Widget> errorCards = [];
     if (errorMessage != "") {
@@ -162,64 +165,15 @@ class _GameScreenState extends State<GameScreen> {
         Card(
             color: colorScheme.errorContainer,
             child: ListTile(
-              title: Text(
-                "Error. Please fix!",
-                style: TextStyle(color: colorScheme.onErrorContainer),
-              ),
+              title: Text("Error. Please fix!", style: onErrorStyle),
               trailing: TextButton(
-                child: Text("CONTINUE",
-                    style: TextStyle(color: colorScheme.onErrorContainer)),
                 onPressed: errorResolvedFunction,
+                child: Text("CONTINUE", style: onErrorStyle),
               ),
             )),
-        SizedBox(
-          height: 8,
-        )
+        const SizedBox(height: 8)
       ];
     }
-
-    Color rowAccentColor = Theme.of(context).colorScheme.background;
-    Color rowNormalColor = Theme.of(context).colorScheme.surface;
-
-    TableRow makeRow(List<String> content,
-        {required Color backgroundColor, TextStyle? textStyle}) {
-      return TableRow(
-          children: content
-              .asMap()
-              .map((index, cell) => MapEntry(
-                  index,
-                  Container(
-                      color: backgroundColor,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4.0),
-                        child: Text(
-                          cell,
-                          textAlign: index == 0 ? TextAlign.center : null,
-                          style: textStyle,
-                        ),
-                      ))))
-              .values
-              .toList());
-    }
-
-    Table movesTable = Table(
-      columnWidths: <int, TableColumnWidth>{
-        0: FixedColumnWidth(20.0),
-        1: FlexColumnWidth(),
-        2: FlexColumnWidth(),
-      },
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      children: <TableRow>[
-        makeRow(["", "You", "Opponent"],
-            backgroundColor: rowAccentColor,
-            textStyle: Theme.of(context).textTheme.titleMedium),
-        makeRow(["1", "♙e4", "♙e5"], backgroundColor: rowNormalColor),
-        makeRow(["2", "♙e4", "♙e5"], backgroundColor: rowAccentColor),
-        makeRow(["3", "♙e4", "♙e5"], backgroundColor: rowNormalColor),
-        makeRow(["4", "♙e4", "♙e5"], backgroundColor: rowAccentColor),
-        makeRow(["5", "♙e4", "♙e5"], backgroundColor: rowNormalColor),
-      ],
-    );
 
     return Scaffold(
       appBar: AppBar(
@@ -229,7 +183,7 @@ class _GameScreenState extends State<GameScreen> {
         children: [
           Expanded(
               child: Padding(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             child: Column(
                 children: errorCards +
                     [
@@ -239,13 +193,17 @@ class _GameScreenState extends State<GameScreen> {
                         // TODO: Disable user moves, currently useful for debugging
                         // enableUserMoves: false,
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Expanded(
                           child: Container(
                         decoration: BoxDecoration(border: Border.all(width: 2)),
                         child: ListView(
                           children: <Widget>[
-                            movesTable,
+                            MovesTable(
+                                controller: internalController,
+                                rowNormalColor: colorScheme.background,
+                                rowAccentColor: colorScheme.surface,
+                                headerStyle: tableHeaderStyle),
                           ],
                         ),
                       )),
