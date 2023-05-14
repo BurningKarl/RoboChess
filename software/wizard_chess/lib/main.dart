@@ -28,12 +28,14 @@ class WizardChessApp extends StatelessWidget {
           WizardChessRoutes.home: (context) => const HomeScreen(),
           WizardChessRoutes.game: (context) {
             final arguments = settings.arguments! as List<dynamic>;
+            dynamic game = arguments[1];
             return GameScreen(
               lichessClient: arguments[0] as LichessClient,
-              gameId: arguments[1]["gameId"] as String,
-              playerColor: arguments[1]["color"] == "white"
+              gameId: game["gameId"] as String,
+              playerColor: game["color"] == "white"
                   ? flutter_chess.Color.WHITE
                   : flutter_chess.Color.BLACK,
+              opponentName: game["opponent"]["username"],
             );
           },
           WizardChessRoutes.settings: (context) => const SettingsScreen(),

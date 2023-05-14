@@ -18,11 +18,13 @@ class GameScreen extends StatefulWidget {
   final LichessClient lichessClient;
   final String gameId;
   final flutter_chess.Color playerColor;
+  final String opponentName;
   const GameScreen(
       {Key? key,
       required this.lichessClient,
       required this.gameId,
-      required this.playerColor})
+      required this.playerColor,
+      required this.opponentName})
       : super(key: key);
 
   @override
@@ -212,10 +214,13 @@ class _GameScreenState extends State<GameScreen> {
                         child: ListView(
                           children: <Widget>[
                             MovesTable(
-                                controller: internalController,
-                                rowNormalColor: colorScheme.background,
-                                rowAccentColor: colorScheme.surface,
-                                headerStyle: tableHeaderStyle),
+                              controller: internalController,
+                              rowNormalColor: colorScheme.background,
+                              rowAccentColor: colorScheme.surface,
+                              headerStyle: tableHeaderStyle,
+                              playerColor: widget.playerColor,
+                              opponentName: widget.opponentName,
+                            ),
                           ],
                         ),
                       )),
