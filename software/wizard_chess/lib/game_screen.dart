@@ -33,6 +33,9 @@ class _GameScreenState extends State<GameScreen> {
   late RoboChessBoardController roboController;
   late LichessController lichessController;
 
+  String errorMessage = "Error. Please fix!";
+  Future<void> Function() errorResolvedFunction = () async {};
+
   Future<void> onLichessMoveMade() async {
     final lichessHistory = lichessController.moves;
     final internalHistory = internalController.game.history;
@@ -143,14 +146,32 @@ class _GameScreenState extends State<GameScreen> {
     internalController.addListener(onInternalMoveMade);
     onInternalMoveMade();
 
-    lichessController = LichessController(
-        client: widget.lichessClient,
-        gameId: widget.gameId);
+    lichessController =
+        LichessController(client: widget.lichessClient, gameId: widget.gameId);
     lichessController.addListener(onLichessMoveMade);
   }
 
   @override
   Widget build(BuildContext context) {
+    ColorScheme colorScheme = Theme.of(context).colorScheme;
+
+    List<Widget> errorCards = [];
+    if (errorMessage != "") {
+      errorCards.add(Card(
+          color: colorScheme.errorContainer,
+          child: ListTile(
+            title: Text(
+              "Error. Please fix!",
+              style: TextStyle(color: colorScheme.onErrorContainer),
+            ),
+            trailing: TextButton(
+              child: Text("CONTINUE",
+                  style: TextStyle(color: colorScheme.onErrorContainer)),
+              onPressed: errorResolvedFunction,
+            ),
+          )));
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Game Screen'),
@@ -167,42 +188,43 @@ class _GameScreenState extends State<GameScreen> {
               )),
           Expanded(
             child: ListView(
-              children: <Widget>[
-                Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Table(
-                      border: TableBorder.all(),
-                      columnWidths: <int, TableColumnWidth>{
-                        0: IntrinsicColumnWidth(),
-                        1: FlexColumnWidth(),
-                        2: FlexColumnWidth(),
-                      },
-                      children: <TableRow>[
-                        TableRow(children: <Widget>[
-                          Text("1"),
-                          Text("e4"),
-                          Text("e5"),
-                        ]),
-                        TableRow(
-                          children: <Widget>[
-                            Text("1"),
-                            Text("e4"),
-                            Text("e5"),
+              children: errorCards +
+                  <Widget>[
+                    Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Table(
+                          border: TableBorder.all(),
+                          columnWidths: <int, TableColumnWidth>{
+                            0: IntrinsicColumnWidth(),
+                            1: FlexColumnWidth(),
+                            2: FlexColumnWidth(),
+                          },
+                          children: <TableRow>[
+                            TableRow(children: <Widget>[
+                              Text("1"),
+                              Text("e4"),
+                              Text("e5"),
+                            ]),
+                            TableRow(
+                              children: <Widget>[
+                                Text("1"),
+                                Text("e4"),
+                                Text("e5"),
+                              ],
+                            ),
+                            TableRow(children: <Widget>[
+                              Text("1"),
+                              Text("e4"),
+                              Text("e5"),
+                            ]),
+                            TableRow(children: <Widget>[
+                              Text("1"),
+                              Text("e4"),
+                              Text("e5"),
+                            ])
                           ],
-                        ),
-                        TableRow(children: <Widget>[
-                          Text("1"),
-                          Text("e4"),
-                          Text("e5"),
-                        ]),
-                        TableRow(children: <Widget>[
-                          Text("1"),
-                          Text("e4"),
-                          Text("e5"),
-                        ])
-                      ],
-                    ))
-              ],
+                        ))
+                  ],
             ),
           ),
           const BluetoothConnectionWidget(),
