@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:flutter_chess_board/flutter_chess_board.dart' as flutter_chess;
 import 'package:wizard_chess/game_screen.dart';
 import 'package:wizard_chess/lichess_client.dart';
 import 'package:wizard_chess/routes.dart';
@@ -28,8 +29,12 @@ class WizardChessApp extends StatelessWidget {
           WizardChessRoutes.game: (context) {
             final arguments = settings.arguments! as List<dynamic>;
             return GameScreen(
-                lichessClient: arguments[0] as LichessClient,
-                gameId: arguments[1] as String);
+              lichessClient: arguments[0] as LichessClient,
+              gameId: arguments[1]["gameId"] as String,
+              playerColor: arguments[1]["color"] == "white"
+                  ? flutter_chess.Color.WHITE
+                  : flutter_chess.Color.BLACK,
+            );
           },
           WizardChessRoutes.settings: (context) => const SettingsScreen(),
           // TODO: Add these screens

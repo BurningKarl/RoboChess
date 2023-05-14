@@ -17,8 +17,12 @@ import 'package:wizard_chess/chess_logic.dart';
 class GameScreen extends StatefulWidget {
   final LichessClient lichessClient;
   final String gameId;
+  final flutter_chess.Color playerColor;
   const GameScreen(
-      {Key? key, required this.lichessClient, required this.gameId})
+      {Key? key,
+      required this.lichessClient,
+      required this.gameId,
+      required this.playerColor})
       : super(key: key);
 
   @override
@@ -26,8 +30,6 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  String screenContent = "Hello World";
-  flutter_chess.Color playerColor = flutter_chess.Color.WHITE;
   bool receiveEvents = false;
   List<RoboChessBoardEvent> eventHistory = [];
   InternalChessBoardController internalController =
@@ -48,7 +50,7 @@ class _GameScreenState extends State<GameScreen> {
               (i) => lichessHistory[i].compatibleWith(internalHistory[i].move))
           .every((e) => e));
     } else if (lichessHistory.length == internalHistory.length + 1 &&
-        internalController.game.turn != playerColor) {
+        internalController.game.turn != widget.playerColor) {
       LichessMove lichessMove = lichessController.moves.last;
       Move opponentMove = internalController.game
           .generate_moves()
@@ -73,7 +75,7 @@ class _GameScreenState extends State<GameScreen> {
     print("onInternalMoveMade: turn=${internalController.game.turn}");
     // TODO: Handle end of game
 
-    if (internalController.game.turn == playerColor) {
+    if (internalController.game.turn == widget.playerColor) {
       // Start listening to board events, one of which will indicate that the
       // players move is done
       receiveEvents = true;
@@ -91,9 +93,6 @@ class _GameScreenState extends State<GameScreen> {
     receiveEvents = false;
 
     print("onPlayerMoveFinished");
-    setState(() {
-      screenContent = "Done with move: ${eventHistory.map((e) => e.toJson())}";
-    });
 
     // Extract move from event history
     List<Move> compatibleMoves =
@@ -199,7 +198,10 @@ class _GameScreenState extends State<GameScreen> {
                     [
                       ChessBoard(
                         controller: internalController,
-                        boardOrientation: PlayerColor.white,
+                        boardOrientation:
+                            widget.playerColor == flutter_chess.Color.WHITE
+                                ? PlayerColor.white
+                                : PlayerColor.black,
                         // TODO: Disable user moves, currently useful for debugging
                         // enableUserMoves: false,
                       ),

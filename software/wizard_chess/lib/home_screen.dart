@@ -179,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (context.mounted) {
                                 Navigator.pushNamed(
                                     context, WizardChessRoutes.game,
-                                    arguments: [lichessClient, game["gameId"]]);
+                                    arguments: [lichessClient, game]);
                               }
                             },
                           ),
