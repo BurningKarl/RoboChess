@@ -39,8 +39,19 @@ class _GameScreenState extends State<GameScreen> {
   late RoboChessBoardController roboController;
   late LichessController lichessController;
 
-  String errorMessage = "Error. Please fix!";
-  Future<void> Function() errorResolvedFunction = () async {};
+  String errorMessage = "";
+  String errorButtonText = "DONE";
+  Completer<void>? errorCompleter;
+
+  Future<void> showErrorMessage(String message, String buttonText) {
+    Completer<void> completer = Completer();
+    setState(() {
+      errorMessage = message;
+      errorButtonText = buttonText;
+      errorCompleter = completer;
+    });
+    return completer.future;
+  }
 
   Future<void> onLichessMoveMade() async {
     print("onLichessMoveMade");
@@ -176,10 +187,10 @@ class _GameScreenState extends State<GameScreen> {
         Card(
             color: colorScheme.errorContainer,
             child: ListTile(
-              title: Text("Error. Please fix!", style: onErrorStyle),
+              title: Text(errorMessage, style: onErrorStyle),
               trailing: TextButton(
-                onPressed: errorResolvedFunction,
-                child: Text("CONTINUE", style: onErrorStyle),
+                onPressed: errorCompleter?.complete,
+                child: Text(errorButtonText, style: onErrorStyle),
               ),
             )),
         const SizedBox(height: 8)
