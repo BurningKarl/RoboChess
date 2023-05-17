@@ -10,6 +10,7 @@ class LichessMove {
   LichessMove({required this.from, required this.to, required this.promotion});
 
   factory LichessMove.fromUci(String uciMove) {
+    print("uciMove: $uciMove of length ${uciMove.length}");
     return LichessMove(
         from: uciMove.substring(0, 2),
         to: uciMove.substring(2, 4),
@@ -51,10 +52,12 @@ class LichessController extends ChangeNotifier {
           .toList();
       notifyListeners();
     } else if (event['type'] == 'gameFull') {
-      moves = (event['state']['moves'] as String)
-          .split(' ')
-          .map(LichessMove.fromUci)
-          .toList();
+      String movesString = (event['state']['moves'] as String).trim();
+      if (movesString.isEmpty) {
+        moves = [];
+      } else {
+        moves = movesString.split(' ').map(LichessMove.fromUci).toList();
+      }
       onInitialized();
     }
   }
