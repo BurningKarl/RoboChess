@@ -10,18 +10,17 @@ import 'package:wizard_chess/internal_chess_board_controller.dart';
 import 'package:wizard_chess/moves_table.dart';
 import 'package:wizard_chess/robo_chess_board_event.dart';
 import 'package:wizard_chess/robo_chess_board_controller.dart';
-import 'package:wizard_chess/lichess_client.dart';
 import 'package:wizard_chess/lichess_controller.dart';
 import 'package:wizard_chess/chess_logic.dart';
 
 class GameScreen extends StatefulWidget {
-  final LichessClient lichessClient;
+  final String authorizationCode;
   final String gameId;
   final flutter_chess.Color playerColor;
   final String opponentName;
   const GameScreen(
       {Key? key,
-      required this.lichessClient,
+      required this.authorizationCode,
       required this.gameId,
       required this.playerColor,
       required this.opponentName})
@@ -81,7 +80,7 @@ class _GameScreenState extends State<GameScreen> {
     } else {
       await showErrorMessage(
           "You made a move on Lichess instead of on the physical board. "
-              "Please go back and select the game from the game selection screen again",
+              "Please go back and select the game from the game selection screen again.",
           "EXIT");
       if (context.mounted) {
         Navigator.of(context).pop();
@@ -158,6 +157,24 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  void onNetworkError(Object error) {
+    print("onNetworkError $error");
+
+    if (!context.mounted) {
+      return;
+    }
+
+    showErrorMessage(
+            "The connection to the Lichess server has been lost. "
+                "Please go back and select the game from the game selection screen again.",
+            "EXIT")
+        .then((value) {
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -168,9 +185,10 @@ class _GameScreenState extends State<GameScreen> {
     roboController = RoboChessBoardController(bluetooth: model);
 
     lichessController = LichessController(
-        client: widget.lichessClient,
+        authorizationCode: widget.authorizationCode,
         gameId: widget.gameId,
-        onInitialized: onLichessControllerInitialized);
+        onInitialized: onLichessControllerInitialized,
+        onError: onNetworkError);
     lichessController.addListener(onLichessMoveMade);
   }
 
@@ -183,6 +201,15 @@ class _GameScreenState extends State<GameScreen> {
 
     internalController.addListener(onInternalMoveMade);
     onInternalMoveMade();
+  }
+
+  @override
+  void dispose() {
+    internalController.dispose();
+    lichessController.dispose();
+    errorCompleter?.completeError(Error());
+
+    super.dispose();
   }
 
   @override

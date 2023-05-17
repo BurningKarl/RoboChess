@@ -77,12 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Settings settings = Settings.getInstance();
   late LichessClient lichessClient;
+  bool lichessClientInitialized = false;
   List<dynamic> ongoingGames = [];
-
-  void initLichessClient() {
-    String authorizationCode = settings.getString(Settings.lichessApiKey) ?? "";
-    lichessClient = LichessClient(authorizationCode: authorizationCode);
-  }
 
   Future<void> showFailurePopup(
       BuildContext context, LichessConnectionFailure failure) {
@@ -177,8 +173,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // If the API key changes (and at startup) ...
     settings.addListener(() {
+      // ... close the previous connection, ...
+      if (lichessClientInitialized) {
+        lichessClient.close();
+      }
+
       // ... initialize the lichess client and ...
-      initLichessClient();
+      String authorizationCode =
+          settings.getString(Settings.lichessApiKey) ?? "";
+      lichessClient = LichessClient(authorizationCode: authorizationCode);
+      lichessClientInitialized = true;
 
       // ... reload the current games (calls onRefresh, i.e. loadGames).
       refreshIndicatorKey.currentState?.show();
@@ -189,6 +193,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     var model = ScopedModel.of<BluetoothConnectionModel>(context);
     model.dispose();
+
+    lichessClient.close();
 
     super.dispose();
   }
@@ -245,7 +251,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (context.mounted) {
                                 Navigator.pushNamed(
                                     context, WizardChessRoutes.game,
-                                    arguments: [lichessClient, game]);
+                                    arguments: [
+                                      lichessClient.authorizationCode,
+                                      game
+                                    ]);
                               }
                             },
                           ),

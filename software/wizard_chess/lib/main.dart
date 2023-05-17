@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:flutter_chess_board/flutter_chess_board.dart' as flutter_chess;
 import 'package:wizard_chess/game_screen.dart';
-import 'package:wizard_chess/lichess_client.dart';
 import 'package:wizard_chess/routes.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
 import 'package:wizard_chess/home_screen.dart';
@@ -30,7 +29,7 @@ class WizardChessApp extends StatelessWidget {
             final arguments = settings.arguments! as List<dynamic>;
             dynamic game = arguments[1];
             return GameScreen(
-              lichessClient: arguments[0] as LichessClient,
+              authorizationCode: arguments[0] as String,
               gameId: game["gameId"] as String,
               playerColor: game["color"] == "white"
                   ? flutter_chess.Color.WHITE

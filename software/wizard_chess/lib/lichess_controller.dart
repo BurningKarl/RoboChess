@@ -24,19 +24,22 @@ class LichessMove {
 }
 
 class LichessController extends ChangeNotifier {
-  LichessClient client;
+  late LichessClient client;
   String gameId;
   List<LichessMove> moves = [];
   void Function() onInitialized;
+  void Function(Object) onError;
 
   LichessController(
-      {required this.client,
+      {required String authorizationCode,
       required this.gameId,
-      required this.onInitialized}) {
+      required this.onInitialized,
+      required this.onError}) {
+    client = LichessClient(authorizationCode: authorizationCode);
     client.streamBoardGameState(gameId: gameId).then((stream) {
       stream.listen(onBoardGameStateChanged, cancelOnError: true);
-      // TODO: Add an onError handler to catch network errors
-      // We should inform the user and provide a popup with a reconnect button
+    }).catchError((error) async {
+      onError(error);
     });
   }
 
@@ -57,6 +60,17 @@ class LichessController extends ChangeNotifier {
   }
 
   void makeMove(Move move) {
-    client.makeBoardMove(gameId: gameId, move: move);
+    try {
+      client.makeBoardMove(gameId: gameId, move: move);
+    } catch (error) {
+      onError(error);
+    }
+  }
+
+  @override
+  void dispose() {
+    client.close();
+
+    super.dispose();
   }
 }
