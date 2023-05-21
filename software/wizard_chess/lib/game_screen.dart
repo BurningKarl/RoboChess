@@ -49,7 +49,14 @@ class _GameScreenState extends State<GameScreen> {
       errorButtonText = buttonText;
       errorCompleter = completer;
     });
-    return completer.future;
+    return completer.future.then((value) {
+      if (context.mounted) {
+        setState(() {
+          errorMessage = "";
+          errorCompleter = null;
+        });
+      }
+    });
   }
 
   Future<void> onLichessMoveMade() async {
@@ -71,12 +78,20 @@ class _GameScreenState extends State<GameScreen> {
       try {
         // Execute opponent move on physical chess board
         await roboController.makeMove(internalController.game, opponentMove);
-      } on RoboMoveUnsuccessfulException catch (e) {
-        // TODO: Make a popup that asks user to perform the move themselves
-        print(e);
-      }
+        internalController.makeMoveFromObject(opponentMove);
+      } on RoboMoveUnsuccessfulException {
+        internalController.makeMoveFromObject(opponentMove);
+        receiveEvents = false;
+        eventHistory.clear();
 
-      internalController.makeMoveFromObject(opponentMove);
+        await showErrorMessage(
+            "The opponent move could not be executed on the board. "
+                "Please set up the board as shown below to continue.",
+            "DONE");
+        if (context.mounted) {
+          receiveEvents = true;
+        }
+      }
     } else {
       await showErrorMessage(
           "You made a move on Lichess instead of on the physical board. "
