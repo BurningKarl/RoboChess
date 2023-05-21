@@ -37,6 +37,7 @@ class _GameScreenState extends State<GameScreen> {
       InternalChessBoardController(Chess());
   late RoboChessBoardController roboController;
   late LichessController lichessController;
+  List<BoardArrow> boardArrows = [];
 
   String errorMessage = "";
   String errorButtonText = "DONE";
@@ -108,13 +109,27 @@ class _GameScreenState extends State<GameScreen> {
     print("onInternalMoveMade: turn=${internalController.game.turn}");
     // TODO: Handle end of game
 
+    final history = internalController.game.history;
+
+    setState(() {
+      if (history.isNotEmpty) {
+        boardArrows = [
+          BoardArrow(
+              from: history.last.move.fromAlgebraic,
+              to: history.last.move.toAlgebraic)
+        ];
+      } else {
+        boardArrows = [];
+      }
+    });
+
     if (internalController.game.turn == widget.playerColor) {
       // Start listening to board events, one of which will indicate that the
       // players move is done
       receiveEvents = true;
     } else {
-      if (internalController.game.history.isNotEmpty) {
-        lichessController.makeMove(internalController.game.history.last.move);
+      if (history.isNotEmpty) {
+        lichessController.makeMove(history.last.move);
       }
     }
   }
@@ -267,6 +282,7 @@ class _GameScreenState extends State<GameScreen> {
                             widget.playerColor == flutter_chess.Color.WHITE
                                 ? PlayerColor.white
                                 : PlayerColor.black,
+                        arrows: boardArrows,
                         // TODO: Disable user moves, currently useful for debugging
                         // enableUserMoves: false,
                       ),
