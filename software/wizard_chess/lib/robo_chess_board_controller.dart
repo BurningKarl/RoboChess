@@ -1,9 +1,9 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_chess_board/flutter_chess_board.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
-import 'package:uuid/uuid.dart';
 
 class RoboMoveUnsuccessfulException implements Exception {}
 
@@ -82,7 +82,6 @@ class BoardCommand {
 
 class RoboChessBoardController {
   BluetoothConnectionModel bluetooth;
-  final Uuid _uuid = const Uuid();
 
   RoboChessBoardController({required this.bluetooth});
 
@@ -214,7 +213,8 @@ class RoboChessBoardController {
   Future<void> makeMove(Chess game, Move move) async {
     print("RoboChessBoardController.makeMove");
 
-    var uniqueId = _uuid.v4();
+    // 36^5 = 60466176, so we generate 5 random characters 0-9a-z
+    var uniqueId = Random().nextInt(60466176).toRadixString(36);
 
     var commands = moveCommands(game, move);
     String message = jsonEncode({
