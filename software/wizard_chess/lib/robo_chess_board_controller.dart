@@ -210,29 +210,34 @@ class RoboChessBoardController {
     }
   }
 
-  Future<void> makeMove(Chess game, Move move) async {
-    print("RoboChessBoardController.makeMove");
-
+  Future<dynamic> bluetoothRequest(Map<String, dynamic> data) async {
     // 36^5 = 60466176, so we generate 5 random characters 0-9a-z
     var uniqueId = Random().nextInt(60466176).toRadixString(36);
 
-    var commands = moveCommands(game, move);
-    String message = jsonEncode({
+    var request = {
       'version': 1,
-      'type': 'move',
       'id': uniqueId,
-      'commands': commands.map((c) => c.asJson()).toList(),
-    });
+      ...data,
+    };
+    String message = jsonEncode(request);
 
     bluetooth.connection!.output
         .add(Uint8List.fromList(utf8.encode('$message\n')));
     var response = await bluetooth.messageQueue.stream
         .firstWhere((element) =>
             element['type'] == 'response' && element['id'] == uniqueId)
-        .timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => {'moveSuccessful': false},
-        );
+        .timeout(const Duration(seconds: 30));
+    return response;
+  }
+
+  Future<void> makeMove(Chess game, Move move) async {
+    print("RoboChessBoardController.makeMove");
+
+    var commands = moveCommands(game, move);
+    var response = await bluetoothRequest({
+      'type': 'move',
+      'commands': commands.map((c) => c.asJson()).toList(),
+    });
 
     if (response['moveSuccessful']) {
       return;
