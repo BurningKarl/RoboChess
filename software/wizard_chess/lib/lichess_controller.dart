@@ -10,7 +10,6 @@ class LichessMove {
   LichessMove({required this.from, required this.to, required this.promotion});
 
   factory LichessMove.fromUci(String uciMove) {
-    print("uciMove: $uciMove of length ${uciMove.length}");
     return LichessMove(
         from: uciMove.substring(0, 2),
         to: uciMove.substring(2, 4),
@@ -38,7 +37,11 @@ class LichessController extends ChangeNotifier {
       required this.onError}) {
     client = LichessClient(authorizationCode: authorizationCode);
     client.streamBoardGameState(gameId: gameId).then((stream) {
-      stream.listen(onBoardGameStateChanged, cancelOnError: true);
+      stream.listen(
+        onBoardGameStateChanged,
+        onError: onError,
+        cancelOnError: true,
+      );
     }).catchError((error) async {
       onError(error);
     });

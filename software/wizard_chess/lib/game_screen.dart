@@ -209,6 +209,9 @@ class _GameScreenState extends State<GameScreen> {
   void initState() {
     super.initState();
 
+    // TODO: Add CircularProgressIndicator while connecting to Lichess server
+    // also while waiting for the board to check the squares
+
     var model = ScopedModel.of<BluetoothConnectionModel>(context);
     model.messageQueue.stream.listen(handleEvent);
 
