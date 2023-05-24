@@ -7,6 +7,8 @@ import 'package:wizard_chess/bluetooth_connection_model.dart';
 
 class RoboMoveUnsuccessfulException implements Exception {}
 
+class NoBluetoothConnection implements Exception {}
+
 class GridPosition {
   final int x;
   final int y;
@@ -221,13 +223,17 @@ class RoboChessBoardController {
     };
     String message = jsonEncode(request);
 
-    bluetooth.connection!.output
-        .add(Uint8List.fromList(utf8.encode('$message\n')));
-    var response = await bluetooth.messageQueue.stream
-        .firstWhere((element) =>
-            element['type'] == 'response' && element['id'] == uniqueId)
-        .timeout(const Duration(seconds: 30));
-    return response;
+    if (bluetooth.connection == null) {
+      throw NoBluetoothConnection();
+    } else {
+      bluetooth.connection!.output
+          .add(Uint8List.fromList(utf8.encode('$message\n')));
+      var response = await bluetooth.messageQueue.stream
+          .firstWhere((element) =>
+              element['type'] == 'response' && element['id'] == uniqueId)
+          .timeout(const Duration(seconds: 30));
+      return response;
+    }
   }
 
   Future<void> makeMove(Chess game, Move move) async {
@@ -244,5 +250,15 @@ class RoboChessBoardController {
     } else {
       throw RoboMoveUnsuccessfulException();
     }
+  }
+
+  Future<List<int>> requestOccupiedSquares() async {
+    print("RoboChessBoardController.requestOccupiedSquares");
+
+    var response = await bluetoothRequest({'type': 'occupied'});
+
+    return (response['occupied'] as List<dynamic>)
+        .map((square) => square as int)
+        .toList();
   }
 }

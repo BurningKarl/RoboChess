@@ -37,6 +37,8 @@ class _GameScreenState extends State<GameScreen> {
       InternalChessBoardController(Chess());
   late RoboChessBoardController roboController;
   late LichessController lichessController;
+  bool lichessControllerInitialized = false;
+  bool boardSetupCorrect = false;
   List<BoardArrow> boardArrows = [];
 
   String errorMessage = "";
@@ -172,10 +174,10 @@ class _GameScreenState extends State<GameScreen> {
 
   void handleEvent(dynamic eventData) async {
     print("handleEvent: $eventData");
-    if (eventData['type'] == "event" && receiveEvents) {
+    if (eventData['type'] == "event" && receiveEvents && boardSetupCorrect) {
       var event = RoboChessBoardEvent.fromJson(eventData);
 
-      if (event.square == 1 << 8) {
+      if (event.square == 0x100) {
         // Button (square number 2^9 = 256) pressed
         if (event.direction == Direction.up) {
           // The user is done with their move
@@ -209,9 +211,6 @@ class _GameScreenState extends State<GameScreen> {
   void initState() {
     super.initState();
 
-    // TODO: Add CircularProgressIndicator while connecting to Lichess server
-    // also while waiting for the board to check the squares
-
     var model = ScopedModel.of<BluetoothConnectionModel>(context);
     model.messageQueue.stream.listen(handleEvent);
 
@@ -232,8 +231,36 @@ class _GameScreenState extends State<GameScreen> {
           .singleWhere(lichessMove.compatibleWith));
     }
 
+    lichessControllerInitialized = true;
     internalController.addListener(onInternalMoveMade);
     onInternalMoveMade();
+
+    checkRoboChessBoardSetup();
+  }
+
+  Future<void> checkRoboChessBoardSetup() async {
+    List<int> occupiedSquares = [];
+    try {
+      occupiedSquares = await roboController.requestOccupiedSquares();
+    } on NoBluetoothConnection {
+      showErrorMessage(
+          "Please establish a Bluetooth connection to the chess board. ",
+          "RETRY").then((_) => checkRoboChessBoardSetup());
+      return;
+    }
+
+    var mismatchExists = internalController.game.board.asMap().entries.any(
+        (entry) =>
+            (entry.value != null) != (occupiedSquares.contains(entry.key)));
+    if (mismatchExists) {
+      await showErrorMessage(
+          "The chess board is not set up properly. "
+              "Please make sure each chess piece is in the position shown below.",
+          "RETRY").then((_) => checkRoboChessBoardSetup());
+      return;
+    } else {
+      boardSetupCorrect = true;
+    }
   }
 
   @override
@@ -267,6 +294,21 @@ class _GameScreenState extends State<GameScreen> {
       ];
     }
 
+    Widget chessBoardOrLoading = lichessControllerInitialized
+        ? ChessBoard(
+            controller: internalController,
+            boardOrientation: widget.playerColor == flutter_chess.Color.WHITE
+                ? PlayerColor.white
+                : PlayerColor.black,
+            arrows: boardArrows,
+            // TODO: Disable user moves, currently useful for debugging
+            // enableUserMoves: false,
+          )
+        : const AspectRatio(
+            aspectRatio: 1.0,
+            child: Center(child: CircularProgressIndicator()),
+          );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Game Screen'),
@@ -279,16 +321,7 @@ class _GameScreenState extends State<GameScreen> {
             child: Column(
                 children: errorCards +
                     [
-                      ChessBoard(
-                        controller: internalController,
-                        boardOrientation:
-                            widget.playerColor == flutter_chess.Color.WHITE
-                                ? PlayerColor.white
-                                : PlayerColor.black,
-                        arrows: boardArrows,
-                        // TODO: Disable user moves, currently useful for debugging
-                        // enableUserMoves: false,
-                      ),
+                      chessBoardOrLoading,
                       const SizedBox(height: 16),
                       Expanded(
                           child: Container(
