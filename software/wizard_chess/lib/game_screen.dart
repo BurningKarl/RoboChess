@@ -39,6 +39,7 @@ class _GameScreenState extends State<GameScreen> {
   late LichessController lichessController;
   bool lichessControllerInitialized = false;
   bool boardSetupCorrect = false;
+  late StreamSubscription bluetoothEventSubscription;
   List<BoardArrow> boardArrows = [];
 
   String errorMessage = "";
@@ -212,7 +213,7 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
 
     var model = ScopedModel.of<BluetoothConnectionModel>(context);
-    model.messageQueue.stream.listen(handleEvent);
+    bluetoothEventSubscription = model.messageQueue.stream.listen(handleEvent);
 
     roboController = RoboChessBoardController(bluetooth: model);
 
@@ -265,6 +266,8 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   void dispose() {
+    bluetoothEventSubscription.cancel();
+
     internalController.dispose();
     lichessController.dispose();
     errorCompleter?.completeError(Error());
