@@ -245,8 +245,16 @@ class _GameScreenState extends State<GameScreen> {
       occupiedSquares = await roboController.requestOccupiedSquares();
     } on NoBluetoothConnection {
       showErrorMessage(
-          "Please establish a Bluetooth connection to the chess board. ",
-          "RETRY").then((_) => checkRoboChessBoardSetup());
+              "Please establish a Bluetooth connection to the chess board. ",
+              "RETRY")
+          .then((_) => checkRoboChessBoardSetup());
+      return;
+    } on TimeoutException {
+      showErrorMessage(
+              "Could not get a response from the board. "
+                  "Please check the Bluetooth connection.",
+              "RETRY")
+          .then((_) => checkRoboChessBoardSetup());
       return;
     }
 
@@ -255,9 +263,10 @@ class _GameScreenState extends State<GameScreen> {
             (entry.value != null) != (occupiedSquares.contains(entry.key)));
     if (mismatchExists) {
       await showErrorMessage(
-          "The chess board is not set up properly. "
-              "Please make sure each chess piece is in the position shown below.",
-          "RETRY").then((_) => checkRoboChessBoardSetup());
+              "The chess board is not set up properly. "
+                  "Please make sure each chess piece is in the position shown below.",
+              "RETRY")
+          .then((_) => checkRoboChessBoardSetup());
       return;
     } else {
       boardSetupCorrect = true;
