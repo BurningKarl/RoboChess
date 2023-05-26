@@ -45,7 +45,7 @@ List<Move> extractCompatibleMoves(
   print("boardDifference: $boardDifference");
 
   int differenceTotal = boardDifference.reduce((a, b) => a + b);
-  int changesCount = boardDifference.reduce((a, b) => a + b.abs());
+  int changesCount = boardDifference.reduce((a, b) => a.abs() + b.abs());
   print("differenceTotal: $differenceTotal");
   print("changesCount: $changesCount");
 
