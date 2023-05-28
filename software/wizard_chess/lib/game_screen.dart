@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:chess_vectors_flutter/chess_vectors_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:flutter_chess_board/flutter_chess_board.dart' hide Color;
@@ -63,6 +64,48 @@ class _GameScreenState extends State<GameScreen> {
         });
       }
     });
+  }
+
+  // Copied from chess_board.dart
+  Future<PieceType> promotionDialog(BuildContext context) async {
+    return showDialog<PieceType>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Choose promotion'),
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              InkWell(
+                child: WhiteQueen(),
+                onTap: () {
+                  Navigator.of(context).pop(PieceType.QUEEN);
+                },
+              ),
+              InkWell(
+                child: WhiteRook(),
+                onTap: () {
+                  Navigator.of(context).pop(PieceType.ROOK);
+                },
+              ),
+              InkWell(
+                child: WhiteBishop(),
+                onTap: () {
+                  Navigator.of(context).pop(PieceType.BISHOP);
+                },
+              ),
+              InkWell(
+                child: WhiteKnight(),
+                onTap: () {
+                  Navigator.of(context).pop(PieceType.KNIGHT);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    ).then((value) => value!);
   }
 
   Future<void> onLichessMoveMade() async {
@@ -184,8 +227,9 @@ class _GameScreenState extends State<GameScreen> {
 
     if (compatibleMoves.length > 1 &&
         (compatibleMoves.first.flags & Chess.BITS_PROMOTION) != 0) {
-      // TODO: Ask the player for the promotion piece
-      internalController.makeMoveFromObject(compatibleMoves.first);
+      PieceType chosenPieceType = await promotionDialog(context);
+      internalController.makeMoveFromObject(compatibleMoves
+          .singleWhere((move) => move.promotion == chosenPieceType));
     } else if (compatibleMoves.isEmpty) {
       await showErrorMessage(
           "The move you made is not legal. "
