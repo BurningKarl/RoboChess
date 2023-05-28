@@ -38,8 +38,6 @@ class WizardChessApp extends StatelessWidget {
             );
           },
           WizardChessRoutes.settings: (context) => const SettingsScreen(),
-          // TODO: Add these screens
-          // WizardChessRoutes.history: (context) => null,
         };
         return MaterialPageRoute(builder: routes[settings.name]!);
       },
