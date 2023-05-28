@@ -12,6 +12,7 @@ import 'package:wizard_chess/robo_chess_board_event.dart';
 import 'package:wizard_chess/robo_chess_board_controller.dart';
 import 'package:wizard_chess/lichess_controller.dart';
 import 'package:wizard_chess/chess_logic.dart';
+import 'package:wizard_chess/error_card.dart';
 
 class GameScreen extends StatefulWidget {
   final String authorizationCode;
@@ -42,22 +43,23 @@ class _GameScreenState extends State<GameScreen> {
   late StreamSubscription bluetoothEventSubscription;
   List<BoardArrow> boardArrows = [];
 
-  String errorMessage = "";
-  String errorButtonText = "DONE";
-  Completer<void>? errorCompleter;
+  List<ErrorCard> errorCards = [];
 
   Future<void> showErrorMessage(String message, String buttonText) {
     Completer<void> completer = Completer();
+    var errorCard = ErrorCard(
+      message: message,
+      buttonText: buttonText,
+      completer: completer,
+    );
+
     setState(() {
-      errorMessage = message;
-      errorButtonText = buttonText;
-      errorCompleter = completer;
+      errorCards.add(errorCard);
     });
     return completer.future.then((value) {
       if (context.mounted) {
         setState(() {
-          errorMessage = "";
-          errorCompleter = null;
+          errorCards.remove(errorCard);
         });
       }
     });
@@ -265,7 +267,7 @@ class _GameScreenState extends State<GameScreen> {
       await showErrorMessage(
               "The chess board is not set up properly. "
                   "Please make sure each chess piece is in the position shown below.",
-              "RETRY")
+              "DONE")
           .then((_) => checkRoboChessBoardSetup());
       return;
     } else {
@@ -279,7 +281,6 @@ class _GameScreenState extends State<GameScreen> {
 
     internalController.dispose();
     lichessController.dispose();
-    errorCompleter?.completeError(Error());
 
     super.dispose();
   }
@@ -287,24 +288,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     ColorScheme colorScheme = Theme.of(context).colorScheme;
-    TextStyle onErrorStyle = TextStyle(color: colorScheme.onErrorContainer);
     TextStyle? tableHeaderStyle = Theme.of(context).textTheme.titleMedium;
-
-    List<Widget> errorCards = [];
-    if (errorMessage != "") {
-      errorCards += [
-        Card(
-            color: colorScheme.errorContainer,
-            child: ListTile(
-              title: Text(errorMessage, style: onErrorStyle),
-              trailing: TextButton(
-                onPressed: errorCompleter?.complete,
-                child: Text(errorButtonText, style: onErrorStyle),
-              ),
-            )),
-        const SizedBox(height: 8)
-      ];
-    }
 
     Widget chessBoardOrLoading = lichessControllerInitialized
         ? ChessBoard(
@@ -330,28 +314,27 @@ class _GameScreenState extends State<GameScreen> {
           Expanded(
               child: Padding(
             padding: const EdgeInsets.all(8),
-            child: Column(
-                children: errorCards +
-                    [
-                      chessBoardOrLoading,
-                      const SizedBox(height: 16),
-                      Expanded(
-                          child: Container(
-                        decoration: BoxDecoration(border: Border.all(width: 2)),
-                        child: ListView(
-                          children: <Widget>[
-                            MovesTable(
-                              controller: internalController,
-                              rowNormalColor: colorScheme.background,
-                              rowAccentColor: colorScheme.surface,
-                              headerStyle: tableHeaderStyle,
-                              playerColor: widget.playerColor,
-                              opponentName: widget.opponentName,
-                            ),
-                          ],
-                        ),
-                      )),
-                    ]),
+            child: Column(children: [
+              ...errorCards,
+              chessBoardOrLoading,
+              const SizedBox(height: 16),
+              Expanded(
+                  child: Container(
+                decoration: BoxDecoration(border: Border.all(width: 2)),
+                child: ListView(
+                  children: <Widget>[
+                    MovesTable(
+                      controller: internalController,
+                      rowNormalColor: colorScheme.background,
+                      rowAccentColor: colorScheme.surface,
+                      headerStyle: tableHeaderStyle,
+                      playerColor: widget.playerColor,
+                      opponentName: widget.opponentName,
+                    ),
+                  ],
+                ),
+              )),
+            ]),
           )),
           const BluetoothConnectionWidget()
         ],
