@@ -71,9 +71,8 @@ class _GameScreenState extends State<GameScreen> {
     final internalHistory = internalController.game.history;
 
     if (lichessHistory.length == internalHistory.length) {
-      assert(Iterable.generate(lichessHistory.length,
-              (i) => lichessHistory[i].compatibleWith(internalHistory[i].move))
-          .every((e) => e));
+      assert(Iterable.generate(lichessHistory.length).every(
+          (i) => lichessHistory[i].compatibleWith(internalHistory[i].move)));
     } else if (lichessHistory.length == internalHistory.length + 1 &&
         internalController.game.turn != widget.playerColor) {
       LichessMove lichessMove = lichessController.moves.last;
@@ -111,10 +110,9 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> onInternalMoveMade() async {
-    print("onInternalMoveMade: turn=${internalController.game.turn}");
-    // TODO: Handle end of game
-
-    final history = internalController.game.history;
+    final Chess game = internalController.game;
+    final history = game.history;
+    print("onInternalMoveMade: turn=${game.turn}");
 
     setState(() {
       if (history.isNotEmpty) {
@@ -128,7 +126,38 @@ class _GameScreenState extends State<GameScreen> {
       }
     });
 
-    if (internalController.game.turn == widget.playerColor) {
+    if (game.game_over) {
+      String message = "Unknown reason";
+
+      if (game.in_stalemate) {
+        message = "The game ended in a stalemate.";
+      } else if (game.in_draw) {
+        message = "The game ended with a draw.";
+      } else if (game.in_checkmate) {
+        message =
+            "The game ended with a checkmate. ${game.turn == widget.playerColor ? "You lost!" : "You won!"}";
+      }
+
+      await showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Game Over'),
+            content: SingleChildScrollView(
+              child: Text(message),
+            ),
+            actions: [
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close pop-up
+                },
+              )
+            ],
+          );
+        },
+      );
+    } else if (game.turn == widget.playerColor) {
       // Start listening to board events, one of which will indicate that the
       // players move is done
       receiveEvents = true;
