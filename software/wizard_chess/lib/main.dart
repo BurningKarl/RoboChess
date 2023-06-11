@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:flutter_chess_board/flutter_chess_board.dart' as flutter_chess;
 import 'package:wizard_chess/game_screen.dart';
@@ -9,7 +10,9 @@ import 'package:wizard_chess/settings_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const WizardChessApp());
+  initializeDateFormatting('en_GB', null).then((_) {
+    runApp(const WizardChessApp());
+  });
 }
 
 class WizardChessApp extends StatelessWidget {

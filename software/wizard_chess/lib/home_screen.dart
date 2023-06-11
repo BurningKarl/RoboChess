@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:chess_vectors_flutter/vector_image.dart';
 import 'package:wizard_chess/bluetooth_connection_model.dart';
@@ -149,6 +150,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ...additionalGameInfo[gameIds[i]]!,
         };
       }
+      games.sort((gameA, gameB) {
+        if (gameA["secondsLeft"] == gameB["secondsLeft"]) {
+          return -(gameA["lastMoveAt"] as int)
+              .compareTo(gameB["lastMoveAt"] as int);
+        } else {
+          return (gameA["secondsLeft"] as int? ?? double.infinity)
+              .compareTo(gameB["secondsLeft"] as int? ?? double.infinity);
+        }
+      });
 
       setState(() {
         ongoingGames = games;
@@ -241,10 +251,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemCount: ongoingGames.length,
                       itemBuilder: (context, index) {
                         dynamic game = ongoingGames[index];
+
+                        DateFormat dateFormat =
+                            DateFormat.yMd('en_GB').add_jm();
                         // TODO: Add time created to shown info?
                         String remainingTime = game['secondsLeft'] == null
                             ? "forever"
                             : "${game['secondsLeft']} seconds";
+                        String lastMoveAt = dateFormat.format(
+                            DateTime.fromMillisecondsSinceEpoch(
+                                    game["lastMoveAt"],
+                                    isUtc: true)
+                                .toLocal());
                         return Card(
                           key: Key(game["gameId"] as String),
                           child: ListTile(
@@ -258,7 +276,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               game["opponent"]["username"],
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
-                            subtitle: Text("Time remaining: $remainingTime"),
+                            subtitle: Text(
+                                "Time remaining: $remainingTime\nLast move: $lastMoveAt"),
+                            isThreeLine: true,
                             onTap: () {
                               if (context.mounted) {
                                 Navigator.pushNamed(

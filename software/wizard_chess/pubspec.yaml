@@ -45,6 +45,7 @@ dependencies:
   url_launcher: ^6.1.9
   dio: ^5.0.1
   permission_handler: ^10.2.0
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
