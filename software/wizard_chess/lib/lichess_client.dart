@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -16,9 +17,29 @@ class LichessClient {
     _dio.options.connectTimeout = const Duration(seconds: 20);
   }
 
-  Future<List<dynamic>> getOngoingGames() async {
+  Future<List<Map<String, dynamic>>> getOngoingGames() async {
     var response = await _dio.get('/account/playing', data: {'nb': 50});
-    return response.data['nowPlaying'];
+    return (response.data['nowPlaying'] as List<dynamic>)
+        .map((game) => game as Map<String, dynamic>)
+        .toList();
+  }
+
+  Future<Map<String, Map<String, dynamic>>> getGamesByIds(
+      Iterable<String> ids) async {
+    var response = await _dio.post(
+      '/games/export/_ids',
+      data: ids.join(','),
+      options: Options(headers: {
+        "Content-Type": "text/plain",
+        "Accept": "application/x-ndjson"
+      }),
+    );
+    return Map.fromEntries((response.data as String)
+        .trim()
+        .split('\n')
+        .map((element) => jsonDecode(element))
+        .map((element) => MapEntry(
+            element["id"] as String, element as Map<String, dynamic>)));
   }
 
   Future<dynamic> challengeAi() async {

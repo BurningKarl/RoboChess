@@ -137,7 +137,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> loadGames(BuildContext context) async {
     try {
-      List<dynamic> games = await lichessClient.getOngoingGames();
+      var games = await lichessClient.getOngoingGames();
+
+      // Add some additional info to the game data, "createdAt" and "lastMoveAt"
+      // are particularly interesting
+      var gameIds = games.map((e) => e["gameId"] as String).toList();
+      var additionalGameInfo = await lichessClient.getGamesByIds(gameIds);
+      for (int i = 0; i < games.length; i++) {
+        games[i] = {
+          ...games[i],
+          ...additionalGameInfo[gameIds[i]]!,
+        };
+      }
+
       setState(() {
         ongoingGames = games;
       });
