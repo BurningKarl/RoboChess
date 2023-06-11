@@ -254,10 +254,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         DateFormat dateFormat =
                             DateFormat.yMd('en_GB').add_jm();
-                        // TODO: Add time created to shown info?
-                        String remainingTime = game['secondsLeft'] == null
-                            ? "forever"
-                            : "${game['secondsLeft']} seconds";
+                        String remainingTime = "";
+                        if (game["secondsLeft"] == null) {
+                          remainingTime = "forever";
+                        } else {
+                          var duration = Duration(seconds: game["secondsLeft"]);
+                          if (duration > const Duration(days: 1)) {
+                            remainingTime = "${duration.inDays} days";
+                          } else if (duration > const Duration(hours: 1)) {
+                            remainingTime = "${duration.inHours} hours";
+                          } else if (duration > const Duration(minutes: 1)) {
+                            remainingTime = "${duration.inMinutes} minutes";
+                          } else {
+                            remainingTime = "${duration.inSeconds} seconds";
+                          }
+                        }
                         String lastMoveAt = dateFormat.format(
                             DateTime.fromMillisecondsSinceEpoch(
                                     game["lastMoveAt"],
