@@ -163,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         ongoingGames = games;
       });
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       setState(() {
         ongoingGames = [];
       });
