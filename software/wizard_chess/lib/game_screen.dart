@@ -230,10 +230,12 @@ class _GameScreenState extends State<GameScreen> {
       PieceType chosenPieceType = await promotionDialog(context);
       internalController.makeMoveFromObject(compatibleMoves
           .singleWhere((move) => move.promotion == chosenPieceType));
-    } else if (compatibleMoves.isEmpty) {
+    } else if (compatibleMoves.isEmpty || compatibleMoves.length > 1) {
+      var message = compatibleMoves.isEmpty
+          ? "The move you made is not legal."
+          : "The move you made is ambiguous.";
       await showErrorMessage(
-          "The move you made is not legal. "
-              "Please undo your last move on the board by restoring the board state shown below.",
+          "$message Please undo your last move on the board by restoring the board state shown below.",
           "DONE");
 
       // When the popup is closed and the user has reset the board to the
@@ -242,8 +244,6 @@ class _GameScreenState extends State<GameScreen> {
       receiveEvents = true;
       return;
     } else {
-      // Throws an error if there is more than one compatible move or if the
-      // only compatible move is illegal
       assert(internalController.makeMoveFromObject(compatibleMoves.single));
     }
   }

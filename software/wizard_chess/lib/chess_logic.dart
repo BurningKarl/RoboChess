@@ -26,6 +26,7 @@ List<Move> extractCompatibleMoves(
     previousBoard[square.key] = square.value == null ? 0 : 1;
   }
 
+  List<RoboChessBoardEvent> relevantEvents = List.empty(growable: true);
   List<int> currentBoard = List.of(previousBoard);
   for (var event in events) {
     switch (event.direction) {
@@ -35,6 +36,10 @@ List<Move> extractCompatibleMoves(
       case Direction.down:
         currentBoard[event.square] = 1;
         break;
+    }
+    relevantEvents.add(event);
+    if (currentBoard == previousBoard) {
+      relevantEvents.clear();
     }
   }
 
@@ -109,9 +114,14 @@ List<Move> extractCompatibleMoves(
     } else if (changesCount == 1) {
       // Regular capturing move
       var from = boardDifference.indexWhere((element) => element == -1);
+      var putDownSquares = relevantEvents
+          .where((event) => event.direction == Direction.down)
+          .map((event) => event.square)
+          .toList();
 
       return legalMoves
-          .where((move) => move.from == from && move.to == events.last.square)
+          .where((move) => move.from == from)
+          .where((move) => putDownSquares.contains(move.to))
           .toList();
     } else {
       return List.empty();
