@@ -231,7 +231,7 @@ class RoboChessBoardController {
       var response = await bluetooth.messageQueue.stream
           .firstWhere((element) =>
               element['type'] == 'response' && element['id'] == uniqueId)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 2));
       return response;
     }
   }
