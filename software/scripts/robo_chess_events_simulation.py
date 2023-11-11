@@ -4,35 +4,13 @@ import math
 import json
 import time
 
-arduino = serial.Serial(port='/dev/ttyACM0', baudrate=9600, timeout=.1)
+arduino = serial.Serial(port='/dev/ttyACM0', baudrate=9600, timeout=0)
 
 root = Tk()
 canvas = Canvas(root, width = 800, height = 800)
 canvas.pack()
 
-board = [[0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0]]
-
 letters = ['x','8','7','6','5','4','3','2','1']
-
-move_sequence = []
-
-def board_init(board):
-  board = [[1,1,1,1,1,1,1,1],
-         [1,1,1,1,1,1,1,1],
-         [0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0,0],
-         [1,1,1,1,1,1,1,1],
-         [1,1,1,1,1,1,1,1]]
-  return board
 
 # Outputs board on terminal
 def print_board(board):
@@ -74,57 +52,35 @@ def get_board():
 
 # Toggles the pick up position to 0 (Empty)
 def pick_up(event):
-  print("Pick up")
-  global board
-  global move_sequence
   j = math.floor((event.x-40)/80)
   i = math.floor((event.y-40)/80)
+  print(f"Pick up ({i}, {j})")
   arduino.write(bytes(json.dumps({"version": 1, "type": "event", "direction": "up", "square": i * 2**4 + j}) + "\n", 'utf-8'))
-  board[i][j] = 0
-  move_sequence.append([i,j,0])
-  print_board(board)
 
 
 # Toggles the put down position to 1 (Full)
 def put_down(event):
-  print("Put down")
-  global board
-  global move_sequence
   j = math.floor((event.x-40)/80)
   i = math.floor((event.y-40)/80)
+  print(f"Put down ({i}, {j})")
   arduino.write(bytes(json.dumps({"version": 1, "type": "event", "direction": "down", "square": i * 2**4 + j}) + "\n", 'utf-8'))
-  board[i][j] = 1
-  move_sequence.append([i,j,1])
-  print_board(board)
 
 def submit_move():
-  global move_sequence
-  up = 0
-  down = 0
-  for i in move_sequence:
-    if i[2] == 1:
-      down += 1
-    else:
-      up += 1
-
-  if up - down == 1:
-    print("Take")
-  elif up - down == 0:
-    print("Move")
-  else:
-    print("Invalid")
-  move_sequence = []
-
+  print("Submit")
   arduino.write(bytes(json.dumps({"version": 1, "type": "event", "direction": "up", "square": 256}) + "\n", 'utf-8'))
   time.sleep(.5)
   print(arduino.readline())
 
+def read_arduino_serial():
+  while (char := arduino.read()):
+    print(char.decode("utf-8"), end="")
+  root.after(100, read_arduino_serial)
 
 
 get_board()
-board = board_init(board)
 canvas.bind("<Button-1>", pick_up)
 canvas.bind("<Button-2>", put_down)
 clk = Button(root, text="clock", command = submit_move)
 clk.pack()
+root.after(100, read_arduino_serial)
 root.mainloop()
