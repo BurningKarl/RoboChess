@@ -17,29 +17,40 @@ void setup()
   digitalWrite(MOTOR_ONE_STEP_PIN, LOW); // set the step pin to low
 }
 
-// This function rotates a motor for the given amount of steps.
-// motor: determines which motor to move, either 1 or 2
-// steps: sets the amount of steps as well as the direction
-//        (positive -> anticlockwise, negative -> clockwise)
+// This function rotates both motors for the given amount of steps.
+// steps_motor1: how many steps to rotate motor 1
+// steps_motor2: how many steps to rotate motor 2
+//   (positive -> anti-clockwise, negative -> clockwise)
 // delay_: amount of microseconds between steps, min 100
-void rotateMotor(int motor, int steps, int delay_) {
-  int dir_pin, step_pin;
-  if (motor == 1) {
-    dir_pin = MOTOR_ONE_DIR_PIN;
-    step_pin = MOTOR_ONE_STEP_PIN;
-  } else {
-    dir_pin = MOTOR_TWO_DIR_PIN;
-    step_pin = MOTOR_TWO_STEP_PIN;
+void rotateMotor(int steps_motor1, int steps_motor2, int delay_) {
+  digitalWrite(MOTOR_ONE_DIR_PIN, steps_motor1 > 0 ? LOW : HIGH);
+  digitalWrite(MOTOR_TWO_DIR_PIN, steps_motor2 > 0 ? LOW : HIGH);
+
+  int stepsTaken = 0;
+  for (; stepsTaken < min(abs(steps_motor1), abs(steps_motor2)); stepsTaken++) {
+    digitalWrite(MOTOR_ONE_STEP_PIN, HIGH);
+    digitalWrite(MOTOR_TWO_STEP_PIN, HIGH);
+    delayMicroseconds(delay_);
+    digitalWrite(MOTOR_ONE_STEP_PIN, LOW);
+    digitalWrite(MOTOR_TWO_STEP_PIN, LOW);
+    delayMicroseconds(delay_);
   }
 
-  // if steps is positive, we move anticlockwise
-  digitalWrite(dir_pin, steps > 0 ? LOW : HIGH);
-
-  for (int i = 0; i < abs(steps); i++) {
-    digitalWrite(step_pin, HIGH);
-    delayMicroseconds(delay_);
-    digitalWrite(step_pin, LOW);
-    delayMicroseconds(delay_);
+  if (abs(steps_motor1) > stepsTaken) {
+    for (; stepsTaken < abs(steps_motor1); stepsTaken++) {
+      digitalWrite(MOTOR_ONE_STEP_PIN, HIGH);
+      delayMicroseconds(delay_);
+      digitalWrite(MOTOR_ONE_STEP_PIN, LOW);
+      delayMicroseconds(delay_);
+    }
+  }
+  if (abs(steps_motor2) > stepsTaken) {
+    for (; stepsTaken < abs(steps_motor2); stepsTaken++) {
+      digitalWrite(MOTOR_TWO_STEP_PIN, HIGH);
+      delayMicroseconds(delay_);
+      digitalWrite(MOTOR_TWO_STEP_PIN, LOW);
+      delayMicroseconds(delay_);
+    }
   }
 }
 
@@ -95,8 +106,7 @@ void moveTo(BLA::Matrix<2>& current_theta, BLA::Matrix<2>& goal_pos) {
       }
     }
 
-    rotateMotor(1, best_direction(0), 500);
-    rotateMotor(2, best_direction(1), 500);
+    rotateMotor(best_direction(0), best_direction(1), 500);
     current_theta = current_theta + best_direction;
     current_pos = theta2pos(current_theta);
 
@@ -111,12 +121,12 @@ void loop()
   delay(10000);
 //  //make steps
 //  Serial.println("Start rotation");
-//  rotateMotor(1, FULL_ROTATION, 500);
+//  rotateMotor(FULL_ROTATION, 0, 500);
 //  delay(1000);
-//  rotateMotor(1, -FULL_ROTATION, 500);
+//  rotateMotor(-FULL_ROTATION, 0, 500);
 //  delay(1000);
-//  rotateMotor(2, FULL_ROTATION, 500);
+//  rotateMotor(0, FULL_ROTATION, 500);
 //  delay(1000);
-//  rotateMotor(2, -FULL_ROTATION, 500);
+//  rotateMotor(0, -FULL_ROTATION, 500);
 //  delay(1000);
 }
