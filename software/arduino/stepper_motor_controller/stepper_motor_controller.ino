@@ -1,11 +1,12 @@
 #include <BasicLinearAlgebra.h>
 
+// 24V operating voltage for the steppers
 const int MOTOR_ONE_DIR_PIN = 5;
 const int MOTOR_ONE_STEP_PIN = 6;
 const int MOTOR_TWO_DIR_PIN = 7;
 const int MOTOR_TWO_STEP_PIN = 8;
 
-const int FULL_ROTATION = 1600 * 4;
+const int FULL_ROTATION = 1600;
 
 void setup() 
 {
@@ -15,6 +16,10 @@ void setup()
   digitalWrite(MOTOR_ONE_DIR_PIN, LOW); // set the direction pin to low
   pinMode(MOTOR_ONE_STEP_PIN, OUTPUT); // set the STEP_PIN as an output
   digitalWrite(MOTOR_ONE_STEP_PIN, LOW); // set the step pin to low
+  pinMode(MOTOR_TWO_DIR_PIN, OUTPUT); // set the DIR_PIN as an output
+  digitalWrite(MOTOR_TWO_DIR_PIN, LOW); // set the direction pin to low
+  pinMode(MOTOR_TWO_STEP_PIN, OUTPUT); // set the STEP_PIN as an output
+  digitalWrite(MOTOR_TWO_STEP_PIN, LOW); // set the step pin to low
 }
 
 // This function rotates both motors for the given amount of steps.
@@ -115,18 +120,20 @@ void moveTo(BLA::Matrix<2>& current_theta, BLA::Matrix<2>& goal_pos) {
 
 void loop()
 {
-  BLA::Matrix<2> current_theta = {0, FULL_ROTATION/4};
-  BLA::Matrix<2> goal_pos = theta2pos({-500, FULL_ROTATION/4 + 500});
-  moveTo(current_theta, goal_pos);
-  delay(10000);
+//  BLA::Matrix<2> current_theta = {0, FULL_ROTATION/4};
+//  BLA::Matrix<2> goal_pos = theta2pos({-500, FULL_ROTATION/4 + 500});
+//  moveTo(current_theta, goal_pos);
+//  delay(10000);
 //  //make steps
-//  Serial.println("Start rotation");
-//  rotateMotor(FULL_ROTATION, 0, 500);
-//  delay(1000);
-//  rotateMotor(-FULL_ROTATION, 0, 500);
-//  delay(1000);
-//  rotateMotor(0, FULL_ROTATION, 500);
-//  delay(1000);
-//  rotateMotor(0, -FULL_ROTATION, 500);
-//  delay(1000);
+  Serial.println("Start rotation");
+  rotateMotor(FULL_ROTATION * 4, 0, 500);
+  delay(1000);
+  rotateMotor(-FULL_ROTATION * 4, 0, 500);
+  delay(1000);
+  rotateMotor(0, FULL_ROTATION * 3, 500);
+  delay(1000);
+  rotateMotor(0, -FULL_ROTATION * 3, 500);
+  delay(1000);
+
+  delay(2000);
 }
